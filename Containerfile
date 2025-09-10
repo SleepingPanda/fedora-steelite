@@ -5,6 +5,9 @@ COPY build_files /
 # Base Image
 FROM quay.io/fedora/fedora-bootc:42
 
+# Add ublue-os akmods repo
+COPY --from=ghcr.io/ublue-os/akmods:42 /etc/yum.repos.d/ublue-os-akmods.repo /etc/yum.repos.d/
+
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite:latest
 # FROM ghcr.io/ublue-os/bluefin-nvidia:stable
