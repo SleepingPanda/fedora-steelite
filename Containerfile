@@ -20,6 +20,8 @@ RUN dnf -y update --refresh
 # Install NVIDIA support packages and signed modules
 RUN dnf -y install /tmp/akmods-nvidia/rpms/ublue-os/ublue-os-nvidia*.rpm
 
+RUN dnf -y install nvidia-kmod-common
+
 # Install everything in kmods, including nvidia-kmod-common
 RUN dnf -y install /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia*.rpm
 
