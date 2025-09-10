@@ -10,8 +10,11 @@ set -ouex pipefail
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/39/x86_64/repoview/index.html&protocol=https&redirect=1
 
 # this installs a package from fedora repos
-dnf5 install -y libratbag-ratbagd 
-
+dnf5 install -y libratbag-ratbagd \
+    akmod-nvidia \
+    akmods-nvidia-uefi \
+    xorg-x11-drv-nvidia \
+    xorg-x11-drv-nvidia-cuda
 # Use a COPR Example:
 #
 # dnf5 -y copr enable ublue-os/staging
@@ -22,3 +25,10 @@ dnf5 install -y libratbag-ratbagd
 #### Example for enabling a System Unit File
 
 systemctl enable ratbagd.service
+
+# Append necessary kargs
+rpm-ostree kargs \
+    --append=rd.driver.blacklist=nouveau,nova_core \
+    --append=modprobe.blacklist=nouveau,nova_core \
+    --append=nvidia-drm.modeset=1 \
+    --append=mitigations=off
