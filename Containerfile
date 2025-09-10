@@ -6,7 +6,7 @@ COPY build_files /
 FROM quay.io/fedora/fedora-bootc:42
 
 # Copy akmods-nvidia container contents
-COPY --from=ghcr.io/ublue-os/akmods-nvidia:42 / /tmp/akmods-nvidia
+COPY --from=ghcr.io/ublue-os/akmods-nvidia:latest / /tmp/akmods-nvidia
 
 # Install NVIDIA support packages and signed modules
 RUN dnf install -y /tmp/akmods-nvidia/rpms/ublue-os/ublue-os-nvidia*.rpm \
