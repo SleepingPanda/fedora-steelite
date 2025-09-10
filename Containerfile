@@ -5,17 +5,12 @@ COPY build_files /
 # Base Image
 FROM quay.io/fedora/fedora-bootc:42
 
-# Add ublue-os akmods repo
-COPY --from=ghcr.io/ublue-os/akmods:42 /etc/yum.repos.d/ublue-os-akmods.repo /etc/yum.repos.d/
+# Copy akmods-nvidia container contents
+COPY --from=ghcr.io/ublue-os/akmods-nvidia:42 / /tmp/akmods-nvidia
 
-## Other possible base images include:
-# FROM ghcr.io/ublue-os/bazzite:latest
-# FROM ghcr.io/ublue-os/bluefin-nvidia:stable
-# 
-# ... and so on, here are more base images
-# Universal Blue Images: https://github.com/orgs/ublue-os/packages
-# Fedora base image: quay.io/fedora/fedora-bootc:41
-# CentOS base images: quay.io/centos-bootc/centos-bootc:stream10
+# Install NVIDIA support packages and signed modules
+RUN dnf install -y /tmp/akmods-nvidia/rpms/ublue-os/ublue-os-nvidia*.rpm \
+                   /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia*.rpm
 
 ### MODIFICATIONS
 ## make modifications desired in your image and install packages by modifying the build.sh script
