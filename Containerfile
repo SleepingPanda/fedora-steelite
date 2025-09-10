@@ -9,8 +9,9 @@ FROM quay.io/fedora/fedora-bootc:42
 COPY --from=ghcr.io/ublue-os/akmods-nvidia:main-42 / /tmp/akmods-nvidia
 RUN find /tmp/akmods-nvidia
 # Install NVIDIA support packages and signed modules
-RUN dnf -y install /tmp/akmods-nvidia/kernel-rpms/*.rpm
-RUN dnf -y install /tmp/akmods-nvidia/rpms/ublue-os/*.rpm
+RUN dnf -y install /tmp/akmods-nvidia/rpms/ublue-os/ublue-os-nvidia*.rpm
+
+# Install everything in kmods, including nvidia-kmod-common
 RUN dnf -y install /tmp/akmods-nvidia/rpms/kmods/*.rpm
 
 ### MODIFICATIONS
