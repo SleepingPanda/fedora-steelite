@@ -10,11 +10,8 @@ set -ouex pipefail
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/39/x86_64/repoview/index.html&protocol=https&redirect=1
 
 # this installs a package from fedora repos
-dnf5 install -y libratbag-ratbagd \
-    akmod-nvidia \
-    akmods-nvidia-uefi \
-    xorg-x11-drv-nvidia \
-    xorg-x11-drv-nvidia-cuda
+dnf5 install -y libratbag-ratbagd
+
 # Use a COPR Example:
 #
 # dnf5 -y copr enable ublue-os/staging
