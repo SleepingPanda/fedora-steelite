@@ -38,7 +38,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=bind,from=akmods,source=/kernel-rpms,dst=/tmp/kernel-rpms \
     --mount=type=bind,from=akmods_nvidia,source=/rpms,dst=/tmp/akmods-nv-rpms \
     if [ "${BUILD_NVIDIA}" == "Y" ]; then \
-        AKMODNV_PATH=/tmp/akmods-nv-rpms /ctx/nvidia-install.sh \
+        AKMODNV_PATH=/tmp/akmods-nv-rpms /ctx/nvidia.sh \
     ; fi && \
     /ctx/build.sh && \
     ostree container commit
