@@ -22,6 +22,3 @@ dnf5 install -y libratbag-ratbagd
 #### Example for enabling a System Unit File
 
 systemctl enable ratbagd.service
-
-# Append necessary kargs
-rpm-ostree kargs --append=mitigations=off
