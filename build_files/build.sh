@@ -24,8 +24,4 @@ dnf5 install -y libratbag-ratbagd
 systemctl enable ratbagd.service
 
 # Append necessary kargs
-rpm-ostree kargs \
-    --append=rd.driver.blacklist=nouveau,nova_core \
-    --append=modprobe.blacklist=nouveau,nova_core \
-    --append=nvidia-drm.modeset=1 \
-    --append=mitigations=off
+rpm-ostree kargs --append=mitigations=off
