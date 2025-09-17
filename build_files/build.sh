@@ -22,3 +22,5 @@ echo -e '[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com
 dnf5 install -y code
 # Steam
 dnf5 install -y --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
+# Misc Tools
+dnf5 install -y rpmdevtools akmods
