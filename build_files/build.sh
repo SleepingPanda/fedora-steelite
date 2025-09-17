@@ -26,5 +26,3 @@ dnf5 install -y --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
 dnf5 install -y rpmdevtools akmods
 # NVIDIA driver
 dnf5 install -y --enablerepo=rpmfusion-nonfree-nvidia-driver akmod-nvidia xorg-x11-drv-nvidia xorg-x11-drv-nvidia-cuda libva-nvidia-driver
-# Update kernel arguments to activate driver, disable nouveau and nova, and disable kernel mitigations
-dnf5 kernel-args add "rd.driver.blacklist=nouveau,nova_core" "modprobe.blacklist=nouveau,nova_core" "nvidia-drm.modeset=1" "mitigations=off"
