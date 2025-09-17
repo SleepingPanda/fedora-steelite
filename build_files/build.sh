@@ -25,5 +25,5 @@ dnf5 install -y --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
 # tools for building and enabling akmod keys
 dnf5 install -y rpmdevtools akmods
 # NVIDIA driver
-dnf5 install -y --enablerepo=rpmfusion-nonfree-nvidia-driver akmod-nvidia xorg-x11-drv-nvidia xorg-x11-drv-nvidia-cuda libva-nvidia-driver xorg-x11-drv-nvidia-power nvidia-vaapi-driver libva-utils
+dnf5 install -y --enablerepo=rpmfusion-nonfree-nvidia-driver akmod-nvidia xorg-x11-drv-nvidia xorg-x11-drv-nvidia-cuda libva-nvidia-driver xorg-x11-drv-nvidia-power
 systemctl enable nvidia-{suspend,resume,hibernate}
