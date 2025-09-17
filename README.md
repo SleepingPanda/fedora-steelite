@@ -6,4 +6,7 @@
 - `Bitwarden` with biometrics and ssh-agent support
 - `Steam`, `MangoHUD` and `gamescope` for obvious reasons
 - `vscode` with better integration of CLI tools
-- `NVIDIA` make sure to run the [accompanying script](enable-nvidia.sh) to properly enable it
+
+## TODO
+
+- `NVIDIA`
