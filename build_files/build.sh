@@ -15,6 +15,7 @@ mv /opt{,.bak}
 mkdir /opt
 dnf5 install -y "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm"
 mv /opt/Bitwarden /usr/lib/Bitwarden
+ln -sf /usr/lib/Bitwarden/bitwarden /usr/bin/bitwarden
 ln -sf /usr/lib/Bitwarden/bitwarden-app /usr/bin/bitwarden-app
 chmod 4755 /usr/lib/Bitwarden/chrome-sandbox
 sed -i 's|^Exec=/opt/Bitwarden|Exec=/usr/bin|g' /usr/share/applications/bitwarden.desktop
