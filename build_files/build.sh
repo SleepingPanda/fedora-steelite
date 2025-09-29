@@ -18,12 +18,12 @@ rmdir /opt
 mv /opt{.bak,}
 # Visual Studio Code
 rpm --import https://packages.microsoft.com/keys/microsoft.asc
-echo -e '[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc' | tee /etc/yum.repos.d/vscode.repo > /dev/null
-dnf5 -y install code
+echo -e '[vscode]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=0\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc' | tee /etc/yum.repos.d/vscode.repo > /dev/null
+dnf5 -y install --enablerepo=vscode code
 # Steam
 dnf5 -y install --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
 # Misc Tools
 dnf5 -y install rpmdevtools
 rpm --import https://repos.fyralabs.com/terra42-nvidia/key.asc
-echo -e '[terra]\nname=Terra 42 NVIDIA\nbaseurl=https://repos.fyralabs.com/terra42-nvidia/\nenabled=0\ngpgcheck=1\ngpgkey=https://repos.fyralabs.com/terra42-nvidia/key.asc' | tee /etc/yum.repos.d/terra42-nvidia.repo > /dev/null
-dnf5 -y --enablerepo=terra42-nvidia install nvidia-driver nvidia-driver-cuda akmod-nvidia
+echo -e '[terra-nvidia]\nname=Terra 42 NVIDIA\nbaseurl=https://repos.fyralabs.com/terra42-nvidia/\nenabled=0\ngpgcheck=1\ngpgkey=https://repos.fyralabs.com/terra42-nvidia/key.asc' | tee /etc/yum.repos.d/terra42-nvidia.repo > /dev/null
+dnf5 -y --enablerepo=terra-nvidia install nvidia-driver nvidia-driver-cuda akmod-nvidia
