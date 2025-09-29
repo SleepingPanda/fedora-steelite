@@ -23,6 +23,7 @@ dnf5 -y install code
 # Steam
 dnf5 -y install --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
 # Misc Tools
-dnf5 -y install rpmdevtools akmods
-sh <(curl https://terra.fyralabs.com/get.sh)
-dnf5 config-manager setopt terra-nvidia.enabled=1
+dnf5 -y install rpmdevtools
+rpm --import https://repos.fyralabs.com/terra42-nvidia/key.asc
+echo -e '[terra]\nname=Terra 42 NVIDIA\nbaseurl=https://repos.fyralabs.com/terra42-nvidia/\nenabled=0\ngpgcheck=1\ngpgkey=https://repos.fyralabs.com/terra42-nvidia/key.asc' | tee /etc/yum.repos.d/terra42-nvidia.repo > /dev/null
+dnf5 -y --enablerepo=terra42-nvidia install nvidia-driver nvidia-driver-cuda akmod-nvidia
