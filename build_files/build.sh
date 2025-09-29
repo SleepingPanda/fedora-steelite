@@ -24,4 +24,5 @@ dnf5 -y install --enablerepo=vscode code
 dnf5 -y install --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
 # Misc Tools
 dnf5 -y install rpmdevtools akmods
+dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 # Misc Fixes
