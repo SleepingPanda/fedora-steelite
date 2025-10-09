@@ -31,4 +31,4 @@ dnf5 -y install rpmdevtools akmods ksshaskpass
 dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 
 # Misc Fixes
-dnf5 -y remove thermald
+dnf5 -y remove thermald firefox
