@@ -18,6 +18,11 @@ sed -i 's|^Exec=/opt/Bitwarden|Exec=/usr/bin|g' /usr/share/applications/bitwarde
 rmdir /opt
 mv /opt{.bak,}
 
+# Zen Browser
+rpm --import https://download.copr.fedorainfracloud.org/results/sneexy/zen-browser/pubkey.gpg
+echo -e '[zen-browser]\nname=Zen Browser\nbaseurl=https://download.copr.fedorainfracloud.org/results/sneexy/zen-browser/fedora-$releasever-$basearch/\nenabled=1\ngpgcheck=1\ngpgkey=https://download.copr.fedorainfracloud.org/results/sneexy/zen-browser/pubkey.gpg' | tee /etc/yum.repos.d/zen-browser.repo > /dev/null
+dnf5 -y install --enablerepo=zen-browser zen-browser
+
 # Visual Studio Code
 rpm --import https://packages.microsoft.com/keys/microsoft.asc
 echo -e '[vscode]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=0\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc' | tee /etc/yum.repos.d/vscode.repo > /dev/null
