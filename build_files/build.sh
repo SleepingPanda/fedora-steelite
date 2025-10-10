@@ -21,7 +21,14 @@ mv /opt{.bak,}
 # Zen Browser
 rpm --import https://download.copr.fedorainfracloud.org/results/sneexy/zen-browser/pubkey.gpg
 echo -e '[zen-browser]\nname=Zen Browser\nbaseurl=https://download.copr.fedorainfracloud.org/results/sneexy/zen-browser/fedora-$releasever-$basearch/\nenabled=1\ngpgcheck=1\ngpgkey=https://download.copr.fedorainfracloud.org/results/sneexy/zen-browser/pubkey.gpg' | tee /etc/yum.repos.d/zen-browser.repo > /dev/null
+mv /opt{,.bak}
+mkdir /opt
 dnf5 -y install --enablerepo=zen-browser zen-browser
+mv /opt/zen /usr/lib/zen
+ln -sf /usr/lib/zen/zen /usr/bin/zen
+sed -i 's|^Exec=/opt/zen/zen|Exec=/usr/bin|g' /usr/share/applications/zen-browser.desktop
+rmdir /opt
+mv /opt{.bak,}
 
 # Visual Studio Code
 rpm --import https://packages.microsoft.com/keys/microsoft.asc
