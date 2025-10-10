@@ -26,7 +26,8 @@ mkdir /opt
 dnf5 -y install --enablerepo=zen-browser zen-browser
 mv /opt/zen /usr/lib/zen
 ln -sf /usr/lib/zen/zen /usr/bin/zen
-sed -i 's|^Exec=/opt/zen/zen|Exec=/usr/bin|g' /usr/share/applications/zen-browser.desktop
+ln -sf /usr/lib/zen/zen-bin /usr/bin/zen-bin
+sed -i 's|^Exec=zen-browser|Exec=/usr/bin/zen|g' /usr/share/applications/zen-browser.desktop
 rmdir /opt
 mv /opt{.bak,}
 
