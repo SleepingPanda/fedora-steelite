@@ -28,6 +28,7 @@ mv /opt/zen /usr/lib/zen
 ln -sf /usr/lib/zen/zen /usr/bin/zen
 ln -sf /usr/lib/zen/zen-bin /usr/bin/zen-bin
 sed -i 's|^Exec=zen-browser|Exec=/usr/bin/zen|g' /usr/share/applications/zen-browser.desktop
+sed -i 's|^Icon=zen-browser|Icon=/usr/lib/zen/browser/chrome/icons/default/default128.png|g'  /usr/share/applications/zen-browser.desktop
 rmdir /opt
 mv /opt{.bak,}
 
