@@ -31,7 +31,7 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 dnf5 -y install --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
 
 # Misc Tools
-dnf5 -y install rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264
+dnf5 -y install rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264 pam-kwallet
 dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 
 # Misc Fixes
