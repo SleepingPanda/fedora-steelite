@@ -40,7 +40,7 @@ dnf5 -y install --enablerepo=vscode code
 # FFMPEG
 echo -e '[rpmfusion-free]\nname=RPM Fusion for Fedora $releasever\nbaseurl=http://download1.rpmfusion.org/free/fedora/releases/$releasever/Everything/$basearch/os/\nenabled=0\ngpgcheck=1\ngpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-free-fedora-$releasever' | tee /etc/yum.repos.d/rpmfusion-free.repo > /dev/null
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
-dnf5 -y update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
+#dnf5 -y update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
 
 # Steam
 dnf5 -y install --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
