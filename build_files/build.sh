@@ -36,6 +36,7 @@ echo -e '[docker-ce]\nname=Docker CE\nbaseurl=https://download.docker.com/linux/
 dnf5 -y install --enablerepo=docker-ce docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 systemctl enable docker
 systemctl enable containerd
+echo -e 'g docker 998' | tee /usr/lib/sysusers.d/docker.conf > /dev/null
 
 # WinBoat
 mv /opt{,.bak}
