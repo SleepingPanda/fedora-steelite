@@ -30,6 +30,13 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 # Steam
 dnf5 -y install --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
 
+# Docker CE
+rpm --import https://download.docker.com/linux/fedora/gpg
+echo -e '[docker-ce]\nname=Docker CE\nbaseurl=https://download.docker.com/linux/fedora/$releasever/$basearch/stable\nenabled=0\ngpgcheck=1\ngpgkey=https://download.docker.com/linux/fedora/gpg' | tee /etc/yum.repos.d/docker-ce.repo > /dev/null
+dnf5 -y install --enablerepo=docker-ce docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl enable docker
+systemctl enable containerd
+
 # Misc Tools
 dnf5 -y install rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264
 dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
