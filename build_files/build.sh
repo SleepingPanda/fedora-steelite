@@ -38,7 +38,15 @@ systemctl enable docker
 systemctl enable containerd
 
 # WinBoat
+mv /opt{,.bak}
+mkdir /opt
 dnf5 -y install "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboat-0.8.7-x86_64.rpm"
+mv /opt/winboat /usr/lib/winboat
+ln -sf /usr/lib/winboat/winboat /usr/bin/winboat
+chmod 4755 /usr/lib/winboat/chrome-sandbox
+sed -i 's|^Exec=/opt/winboat|Exec=/usr/bin|g' /usr/share/applications/winboat.desktop
+rmdir /opt
+mv /opt{.bak,}
 
 # Misc Tools
 dnf5 -y install rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264
