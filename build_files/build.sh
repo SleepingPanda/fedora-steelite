@@ -37,6 +37,9 @@ dnf5 -y install --enablerepo=docker-ce docker-ce docker-ce-cli containerd.io doc
 systemctl enable docker
 systemctl enable containerd
 
+# WinBoat
+dnf5 -y install "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboat-0.8.7-x86_64.rpm"
+
 # Misc Tools
 dnf5 -y install rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264
 dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
