@@ -57,3 +57,4 @@ dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 dnf5 -y remove alsa-firmware alsa-sof-firmware amd-gpu-firmware atheros-firmware brcmfmac-firmware cirrus-audio-firmware intel-audio-firmware intel-gpu-firmware intel-vsc-firmware iwlegacy-firmware iwlwifi-dvm-firmware iwlwifi-mld-firmware iwlwifi-mvm-firmware libertas-firmware mt7xxx-firmware nxpwireless-firmware qcom-wwan-firmware tiwilink-firmware thermald firefox
 
 dnf5 -y clean all
+rm -rf /var/lib/dnf
