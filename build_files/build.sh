@@ -2,9 +2,31 @@
 
 set -eoux pipefail
 
+# Misc Tools
+dnf5 -y install rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264
+dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
+
+# Misc Removals
+dnf5 -y remove alsa-firmware alsa-sof-firmware amd-gpu-firmware atheros-firmware brcmfmac-firmware cirrus-audio-firmware intel-audio-firmware intel-gpu-firmware intel-vsc-firmware iwlegacy-firmware iwlwifi-dvm-firmware iwlwifi-mld-firmware iwlwifi-mvm-firmware libertas-firmware mt7xxx-firmware nxpwireless-firmware qcom-wwan-firmware tiwilink-firmware thermald firefox
+
+# FFMPEG and Codecs
+echo -e '[rpmfusion-free]\nname=RPM Fusion for Fedora $releasever\nbaseurl=http://download1.rpmfusion.org/free/fedora/releases/$releasever/Everything/$basearch/os/\nenabled=0\ngpgcheck=1\ngpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-free-fedora-$releasever' | tee /etc/yum.repos.d/rpmfusion-free.repo > /dev/null
+dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
+
 # libratbag
 dnf5 -y install libratbag-ratbagd
 systemctl enable ratbagd.service
+
+# Steam
+dnf5 -y install --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
+
+# Docker CE
+rpm --import https://download.docker.com/linux/fedora/gpg
+echo -e '[docker-ce]\nname=Docker CE\nbaseurl=https://download.docker.com/linux/fedora/$releasever/$basearch/stable\nenabled=0\ngpgcheck=1\ngpgkey=https://download.docker.com/linux/fedora/gpg' | tee /etc/yum.repos.d/docker-ce.repo > /dev/null
+dnf5 -y install --enablerepo=docker-ce docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+systemctl enable docker
+systemctl enable containerd
+echo -e 'g docker 998' | tee /usr/lib/sysusers.d/docker.conf > /dev/null
 
 # Bitwarden
 mv /opt{,.bak}
@@ -23,21 +45,6 @@ rpm --import https://packages.microsoft.com/keys/microsoft.asc
 echo -e '[vscode]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=0\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc' | tee /etc/yum.repos.d/vscode.repo > /dev/null
 dnf5 -y install --enablerepo=vscode code
 
-# FFMPEG and Codecs
-echo -e '[rpmfusion-free]\nname=RPM Fusion for Fedora $releasever\nbaseurl=http://download1.rpmfusion.org/free/fedora/releases/$releasever/Everything/$basearch/os/\nenabled=0\ngpgcheck=1\ngpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-free-fedora-$releasever' | tee /etc/yum.repos.d/rpmfusion-free.repo > /dev/null
-dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
-
-# Steam
-dnf5 -y install --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
-
-# Docker CE
-rpm --import https://download.docker.com/linux/fedora/gpg
-echo -e '[docker-ce]\nname=Docker CE\nbaseurl=https://download.docker.com/linux/fedora/$releasever/$basearch/stable\nenabled=0\ngpgcheck=1\ngpgkey=https://download.docker.com/linux/fedora/gpg' | tee /etc/yum.repos.d/docker-ce.repo > /dev/null
-dnf5 -y install --enablerepo=docker-ce docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-systemctl enable docker
-systemctl enable containerd
-echo -e 'g docker 998' | tee /usr/lib/sysusers.d/docker.conf > /dev/null
-
 # WinBoat
 mv /opt{,.bak}
 mkdir /opt
@@ -48,13 +55,6 @@ chmod 4755 /usr/lib/winboat/chrome-sandbox
 sed -i 's|^Exec=/opt/winboat|Exec=/usr/bin|g' /usr/share/applications/winboat.desktop
 rmdir /opt
 mv /opt{.bak,}
-
-# Misc Tools
-dnf5 -y install rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264
-dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
-
-# Misc Fixes
-dnf5 -y remove alsa-firmware alsa-sof-firmware amd-gpu-firmware atheros-firmware brcmfmac-firmware cirrus-audio-firmware intel-audio-firmware intel-gpu-firmware intel-vsc-firmware iwlegacy-firmware iwlwifi-dvm-firmware iwlwifi-mld-firmware iwlwifi-mvm-firmware libertas-firmware mt7xxx-firmware nxpwireless-firmware qcom-wwan-firmware tiwilink-firmware thermald firefox
 
 dnf5 -y clean all
 rm -rf /var/lib/dnf
