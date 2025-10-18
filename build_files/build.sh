@@ -19,19 +19,9 @@ install_app() {
     rm -rf "$tmpdir"
 }
 
-# NVIDIA
-KERNEL_VERSION="$(rpm -q --queryformat="%{EVR}.%{ARCH}" kernel-core)"
-curl -Lo /tmp/nvidia-install.sh https://raw.githubusercontent.com/ublue-os/main/refs/heads/main/build_files/nvidia-install.sh
-chmod +x /tmp/nvidia-install.sh
-IMAGE_NAME="kinoite" RPMFUSION_MIRROR="" /tmp/nvidia-install.sh
-rm -f /usr/share/vulkan/icd.d/nouveau_icd.*.json
-ln -sf libnvidia-ml.so.1 /usr/lib64/libnvidia-ml.so
-dnf5 config-manager setopt fedora-multimedia.enabled=1 fedora-nvidia.enabled=0
-
-depmod -a "${KERNEL_VERSION}"
-
 # Misc Tools
-dnf5 -y install ksshaskpass gstreamer1-plugin-openh264
+dnf5 -y install rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264
+dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 
 # Misc Removals
 dnf5 -y remove '*-firmware' thermald firefox \
