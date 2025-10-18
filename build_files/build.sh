@@ -6,14 +6,18 @@ set -eEox pipefail
 install_app() {
     local url="$1"
     local name="$2"
-    local tmpdir rpmfile
+    local tmpdir rpmfile desktop_file
 
     tmpdir=$(mktemp -d)
     rpmfile="$tmpdir/$name.rpm"
     curl -L -o "$rpmfile" "$url"
     rpm2cpio "$rpmfile" | (cd "$tmpdir" && cpio -idmv)
     mv "$tmpdir/opt/$name" "/usr/lib/$name"
-    ln -sfn "/usr/lib/$name" "/opt/$name"
+    desktop_file="/usr/share/applications/${name,,}.desktop"
+    if [[ -f "$desktop_file" ]]; then
+        sed -i "s|^Exec=/opt/$name|Exec=/usr/lib/$name|g" "$desktop_file"
+        sed -i "s|^Icon=/opt/$name|Icon=/usr/lib/$name|g" "$desktop_file"
+    fi
     rm -rf "$tmpdir"
 }
 
