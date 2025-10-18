@@ -6,15 +6,13 @@ set -eEox pipefail
 install_app() {
     local url="$1"
     local name="$2"
+    local tmpdir rpmfile
 
-    local tmpdir
     tmpdir=$(mktemp -d)
-    mkdir "$tmpdir/opt"
-    mount --bind "$tmpdir/opt" /opt
-    dnf5 -y install "$url"
-    umount /opt
-
-    mv "$tmpdir/opt/$name" "/usr/lib/$name"
+    rpmfile="$tmpdir/$name.rpm"
+    curl -L -o "$rpmfile" "$url"
+    rpm2cpio "$rpmfile" | (cd "$tmpdir" && cpio -idmv)
+    mv $tmpdir/opt/$name" "/usr/lib/"$name"
     ln -sfn "/usr/lib/$name" "/opt/$name"
     rm -rf "$tmpdir"
 }
