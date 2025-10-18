@@ -12,7 +12,7 @@ install_app() {
     rpmfile="$tmpdir/$name.rpm"
     curl -L -o "$rpmfile" "$url"
     rpm2cpio "$rpmfile" | (cd "$tmpdir" && cpio -idmv)
-    mv $tmpdir/opt/$name" "/usr/lib/"$name"
+    mv "$tmpdir/opt/$name" "/usr/lib/$name"
     ln -sfn "/usr/lib/$name" "/opt/$name"
     rm -rf "$tmpdir"
 }
