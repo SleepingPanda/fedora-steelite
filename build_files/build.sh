@@ -9,10 +9,11 @@ install_app() {
     local tmpdir rpmfile desktop_file
 
     tmpdir=$(mktemp -d)
+    trap 'rm -rf "$tmpdir"' EXIT
     rpmfile="$tmpdir/$name.rpm"
     curl -L -o "$rpmfile" "$url"
     rpm2cpio "$rpmfile" | (cd "$tmpdir" && cpio -idmv)
-    mv "$tmpdir/opt/$name" "/usr/lib/$name"
+    cp -a "$tmpdir/opt/$name" "/usr/lib/$name"
     desktop_file="/usr/share/applications/${name,,}.desktop"
     if [[ -f "$desktop_file" ]]; then
         sed -i "s|^Exec=/opt/$name|Exec=/usr/lib/$name|g" "$desktop_file"
@@ -26,7 +27,7 @@ install_app() {
 tee /etc/yum.repos.d/rpmfusion-free.repo <<'EOF'
 [rpmfusion-free]
 name=RPM Fusion for Fedora $releasever
-baseurl=http://download1.rpmfusion.org/free/fedora/releases/$releasever/Everything/$basearch/os/
+baseurl=http://download1.rpmfusion.org/free/fedora/development/$releasever/Everything/$basearch/os/
 enabled=0
 gpgcheck=1
 gpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-free-fedora-$releasever
