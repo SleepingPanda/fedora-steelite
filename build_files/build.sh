@@ -21,17 +21,7 @@ install_app() {
     rm -rf "$tmpdir"
 }
 
-# Misc Tools
-dnf5 -y install rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264
-dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
-
-# Misc Removals
-dnf5 -y remove '*-firmware' thermald firefox \
-    --exclude='nvidia-gpu-firmware' \
-    --exclude='amd-ucode-firmware' \
-    --exclude='linux-firmware*' \
-    --exclude='realtek-firmware'
-
+# Create Repo Files
 # FFMPEG and Codecs
 tee /etc/yum.repos.d/rpmfusion-free.repo <<'EOF'
 [rpmfusion-free]
@@ -41,13 +31,6 @@ enabled=0
 gpgcheck=1
 gpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-free-fedora-$releasever
 EOF
-dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
-
-# libratbag
-dnf5 -y install libratbag-ratbagd
-
-# Steam
-dnf5 -y install --enablerepo=rpmfusion-nonfree-steam mangohud gamescope steam
 
 # Docker CE
 rpm --import https://download.docker.com/linux/fedora/gpg
@@ -59,12 +42,6 @@ enabled=0
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/fedora/gpg
 EOF
-dnf5 -y install --enablerepo=docker-ce docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-echo -e 'g docker 998' | tee /usr/lib/sysusers.d/docker.conf > /dev/null
-
-# Bitwarden
-install_app "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm" Bitwarden
-chmod 4755 /usr/lib/Bitwarden/chrome-sandbox
 
 # Visual Studio Code
 rpm --import https://packages.microsoft.com/keys/microsoft.asc
@@ -76,15 +53,49 @@ enabled=0
 gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
-dnf5 -y install --enablerepo=vscode code
+
+# LACT
+tee /etc/yum.repos.d/lact.repo <<'EOF'
+[lact]
+name=LACT
+baseurl=https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/fedora-$releasever-$basearch/
+enabled=0
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
+EOF
+
+# Install Packages
+# Tools, Drivers, Steam, Code, LACT, Docker
+dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
+dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
+dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264 libratbag-ratbagd docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code lact mangohud gamescope steam
+
+# Misc Removals
+dnf5 -y remove '*-firmware' thermald firefox \
+    --exclude='nvidia-gpu-firmware' \
+    --exclude='amd-ucode-firmware' \
+    --exclude='linux-firmware*' \
+    --exclude='realtek-firmware'
 
 # WinBoat
 install_app "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboat-0.8.7-x86_64.rpm" winboat
 chmod 4755 /usr/lib/winboat/chrome-sandbox
 
+# Bitwarden
+install_app "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm" Bitwarden
+chmod 4755 /usr/lib/Bitwarden/chrome-sandbox
+
 # Enable Services
-systemctl enable ratbagd.service docker.service containerd.service
+systemctl enable ratbagd.service docker.service containerd.service lactd.service
 systemctl --global enable podman-auto-update.timer
+
+tee /usr/lib/sysusers.d/docker.conf <<'EOF'
+g docker 998
+EOF
+
+tee /etc/modules-load.d/ntsync.conf <<'EOF'
+ntsync
+EOF
 
 dnf5 -y clean all
 rm -rf /var/lib/dnf

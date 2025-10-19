@@ -6,6 +6,9 @@
 - `libratbag` to get your Logitech peripherals working correctly
 - `Steam`, `MangoHUD` and `Gamescope` for pretty obvious reasons
 - `Visual Studio Ccode` for better integration with CLI tools
+- `WinBoat` for running windows apps with a seamless experience
+- `Docker` for winboat support and devops
+- `LACT` for GPU metrics, fan control and overclocking
 
 ## TODO
 
