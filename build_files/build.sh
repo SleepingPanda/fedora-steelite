@@ -13,7 +13,7 @@ install_app() {
     curl -L -o "$rpmfile" "$url"
     rpm2cpio "$rpmfile" | (cd "$tmpdir" && cpio -idmv)
     cp -a "$tmpdir/opt/$name" "/usr/lib/$name"
-    cp -a "$tmpdir/usr/share/applications/$name.desktop" "/usr/share/applications/"
+    cp -a "$tmpdir/usr/share/applications/${name,,}.desktop" "/usr/share/applications/"
     cp -a "$tmpdir/usr/share/icons/hicolor" "/usr/share/icons/hicolor"
     desktop_file="/usr/share/applications/${name,,}.desktop"
     if [[ -f "$desktop_file" ]]; then
