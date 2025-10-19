@@ -6,20 +6,24 @@ set -eEox pipefail
 install_app() {
     local url="$1"
     local name="$2"
-    local tmpdir rpmfile desktop_file
-
+    local tmpdir rpmfile desktop_file chrome_sandbox
     tmpdir=$(mktemp -d)
     trap 'rm -rf "$tmpdir"' EXIT
     rpmfile="$tmpdir/$name.rpm"
     curl -L -o "$rpmfile" "$url"
     rpm2cpio "$rpmfile" | (cd "$tmpdir" && cpio -idmv)
     cp -a "$tmpdir/opt/$name" "/usr/lib/$name"
+    cp -a "$tmpdir/usr/share/applications/$name.desktop" "/usr/share/applications/"
+    cp -a "$tmpdir/usr/share/icons/hicolor" "/usr/share/icons/hicolor"
     desktop_file="/usr/share/applications/${name,,}.desktop"
     if [[ -f "$desktop_file" ]]; then
         sed -i "s|^Exec=/opt/$name|Exec=/usr/lib/$name|g" "$desktop_file"
         sed -i "s|^Icon=/opt/$name|Icon=/usr/lib/$name|g" "$desktop_file"
     fi
-    rm -rf "$tmpdir"
+    chrome_sandbox="/usr/lib/$name/chrome-sandbox"
+    if [[ -f "$chrome_sandbox" ]]; then
+        chmod 4755 "$chrome_sandbox"
+    fi
 }
 
 # Create Repo Files
@@ -80,11 +84,9 @@ dnf5 -y remove '*-firmware' thermald firefox \
 
 # WinBoat
 install_app "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboat-0.8.7-x86_64.rpm" winboat
-chmod 4755 /usr/lib/winboat/chrome-sandbox
 
 # Bitwarden
 install_app "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm" Bitwarden
-chmod 4755 /usr/lib/Bitwarden/chrome-sandbox
 
 # Enable Services
 systemctl enable ratbagd.service docker.service containerd.service lactd.service
