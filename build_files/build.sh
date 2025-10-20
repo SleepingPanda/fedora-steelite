@@ -8,13 +8,12 @@ install_app() {
     local name="$2"
     local tmpdir rpmfile desktop_file chrome_sandbox
     tmpdir=$(mktemp -d)
-    trap 'rm -rf "$tmpdir"' EXIT
     rpmfile="$tmpdir/$name.rpm"
     curl -L -o "$rpmfile" "$url"
     rpm2cpio "$rpmfile" | (cd "$tmpdir" && cpio -idmv)
     cp -a "$tmpdir/opt/$name" "/usr/lib/$name"
     cp -a "$tmpdir/usr/share/applications/${name,,}.desktop" "/usr/share/applications/"
-    cp -a "$tmpdir/usr/share/icons/hicolor" "/usr/share/icons/hicolor"
+    cp -a "$tmpdir/usr/share/icons/hicolor/." "/usr/share/icons/hicolor/"
     desktop_file="/usr/share/applications/${name,,}.desktop"
     if [[ -f "$desktop_file" ]]; then
         sed -i "s|^Exec=/opt/$name|Exec=/usr/lib/$name|g" "$desktop_file"
@@ -24,6 +23,7 @@ install_app() {
     if [[ -f "$chrome_sandbox" ]]; then
         chmod 4755 "$chrome_sandbox"
     fi
+    rm -rf "$tmpdir"
 }
 
 # Create Repo Files
