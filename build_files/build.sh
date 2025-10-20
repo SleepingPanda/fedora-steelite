@@ -60,6 +60,7 @@ gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
 
 # LACT
+rpm --import https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
 tee /etc/yum.repos.d/lact.repo <<'EOF'
 [lact]
 name=LACT
@@ -92,6 +93,7 @@ install_app "https://bitwarden.com/download/?app=desktop&platform=linux&variant=
 systemctl enable ratbagd.service docker.service containerd.service lactd.service
 systemctl --global enable podman-auto-update.timer
 
+# Configurations and Rules
 tee /usr/lib/sysusers.d/docker.conf <<'EOF'
 g docker 998
 EOF
@@ -100,5 +102,34 @@ tee /etc/modules-load.d/ntsync.conf <<'EOF'
 ntsync
 EOF
 
+mkdir -p /etc/systemd/journald.conf.d
+tee /etc/systemd/journald.conf.d/00-journal-size.conf <<'EOF'
+[Journal]
+SystemMaxUse=150M
+EOF
+
+tee /etc/tmpfiles.d/coredump.conf <<'EOF'
+d /var/lib/systemd/coredump 0755 root root 3d
+EOF
+
+tee /etc/tmpfiles.d/thp.conf <<'EOF'
+w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 409
+EOF
+
+tee /etc/udev/rules.d/40-audio-timing.rules <<'EOF'
+DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
+EOF
+
+tee /etc/udev/rules.d/50-sata.rules <<'EOF'
+ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", \
+    ATTR{link_power_management_policy}=="*", \
+    ATTR{link_power_management_policy}="max_performance"
+EOF
+
+udevadm control --reload-rules
+systemd-tmpfiles --create
+
+# Cleanup
 dnf5 -y clean all
 rm -rf /var/lib/dnf
