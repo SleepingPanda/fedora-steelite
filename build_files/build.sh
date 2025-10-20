@@ -127,7 +127,6 @@ ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", \
     ATTR{link_power_management_policy}="max_performance"
 EOF
 
-udevadm control --reload-rules
 systemd-tmpfiles --create
 
 # Cleanup
