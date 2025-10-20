@@ -127,8 +127,6 @@ ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", \
     ATTR{link_power_management_policy}="max_performance"
 EOF
 
-systemd-tmpfiles --create
-
 # Cleanup
 dnf5 -y clean all
 rm -rf /var/lib/dnf
