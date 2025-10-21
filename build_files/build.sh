@@ -125,7 +125,9 @@ EOF
 
 grep -E '^gamemode:' /usr/lib/group | tee -a /etc/group
 grep -E '^audio:' /usr/lib/group | tee -a /etc/group
-grep -E '^docker:' /usr/lib/group | tee -a /etc/group
+tee -a /etc/group <<'EOF'
+docker:x:998:
+EOF
 
 # Cleanup
 dnf5 -y clean all
