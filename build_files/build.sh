@@ -77,11 +77,7 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264 libratbag-ratbagd docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code lact mangohud gamescope steam
 
 # Misc Removals
-dnf5 -y remove '*-firmware' thermald firefox \
-    --exclude='nvidia-gpu-firmware' \
-    --exclude='amd-ucode-firmware' \
-    --exclude='linux-firmware*' \
-    --exclude='realtek-firmware'
+dnf5 -y remove '*-firmware' thermald firefox --exclude='nvidia-gpu-firmware' --exclude='amd-ucode-firmware' --exclude='linux-firmware*' --exclude='realtek-firmware'
 
 # WinBoat
 install_app "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboat-0.8.7-x86_64.rpm" winboat
@@ -117,7 +113,7 @@ w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 409
 EOF
 
-tee /etc/udev/rules.d/40-audio-timing.rules <<'EOF'
+tee /etc/udev/rules.d/99-cpu-dma-latency.rules <<'EOF'
 DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
 EOF
 
@@ -126,6 +122,10 @@ ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", \
     ATTR{link_power_management_policy}=="*", \
     ATTR{link_power_management_policy}="max_performance"
 EOF
+
+grep -E '^gamemode:' /usr/lib/group | tee -a /etc/group
+grep -E '^audio:' /usr/lib/group | tee -a /etc/group
+grep -E '^docker:' /usr/lib/group | tee -a /etc/group
 
 # Cleanup
 dnf5 -y clean all
