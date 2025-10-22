@@ -118,9 +118,7 @@ DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", M
 EOF
 
 tee /etc/udev/rules.d/50-sata.rules <<'EOF'
-ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", \
-    ATTR{link_power_management_policy}=="*", \
-    ATTR{link_power_management_policy}="max_performance"
+ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
 EOF
 
 grep -E '^gamemode:' /usr/lib/group | tee -a /etc/group
