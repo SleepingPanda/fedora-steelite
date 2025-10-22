@@ -2,8 +2,8 @@
 
 set -eEox pipefail
 
-# Helper Function
-install_app() {
+# Helper Functions
+install_rpm() {
     local url="$1"
     local name="$2"
     local tmpdir rpmfile desktop_file chrome_sandbox
@@ -80,10 +80,10 @@ dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-
 dnf5 -y remove '*-firmware' thermald firefox --exclude='nvidia-gpu-firmware' --exclude='amd-ucode-firmware' --exclude='linux-firmware*' --exclude='realtek-firmware'
 
 # WinBoat
-install_app "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboat-0.8.7-x86_64.rpm" winboat
+install_rpm "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboat-0.8.7-x86_64.rpm" winboat
 
 # Bitwarden
-install_app "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm" Bitwarden
+install_rpm "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm" Bitwarden
 
 # Enable Services
 systemctl enable ratbagd.service docker.service containerd.service lactd.service
