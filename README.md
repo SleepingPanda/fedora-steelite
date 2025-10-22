@@ -5,15 +5,14 @@
 - `Bitwarden` with biometrics and SSH-Agent support
 - `libratbag` to get your Logitech peripherals working correctly
 - `Steam`, `MangoHUD` and `Gamescope` for pretty obvious reasons
-- `Visual Studio Ccode` for better integration with CLI tools
-- `WinBoat` for running windows apps with a seamless experience
-- `Docker` for winboat support and devops
+- `Visual Studio Code` and `Docker` for devops and better integration with CLI tools
+- `WinBoat` for running windows apps with a near seamless experience
 - `LACT` for GPU metrics, fan control and overclocking
 
 ## TODO
 
-- `NVIDIA`
+- `NVIDIA` WIP
 
 ## NOTE
 
-This is not meant for regular users. If that's what you want, install Fedora like a normal person! Make sure to carefully examine the build file before installing!
+This is not meant for regular users in its current state. You would be better served by nstalling Fedora like a normal person! If you still want to make the jump for some reason, be sure to carefully examine build_files\build.sh before installing!
