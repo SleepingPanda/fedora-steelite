@@ -85,6 +85,9 @@ install_rpm "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboa
 # Bitwarden
 install_rpm "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm" Bitwarden
 
+# Tabby
+install_rpm "https://github.com/Eugeny/tabby/releases/download/v1.0.228/tabby-1.0.228-linux-x64.rpm" Tabby
+
 # Enable Services
 systemctl enable ratbagd.service docker.service containerd.service lactd.service
 systemctl --global enable podman-auto-update.timer
@@ -113,11 +116,11 @@ w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 409
 EOF
 
-tee /etc/udev/rules.d/99-cpu-dma-latency.rules <<'EOF'
+tee /etc/udev/rules.d/60-cpu-dma-latency-permissions.rules <<'EOF'
 DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
 EOF
 
-tee /etc/udev/rules.d/50-sata.rules <<'EOF'
+tee /etc/udev/rules.d/99-scsi-link-power-performance.rules <<'EOF'
 ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
 EOF
 

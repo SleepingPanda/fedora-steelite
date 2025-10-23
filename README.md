@@ -5,7 +5,7 @@
 - `Bitwarden` with biometrics and SSH-Agent support
 - `libratbag` to get your Logitech peripherals working correctly
 - `Steam`, `MangoHUD` and `Gamescope` for pretty obvious reasons
-- `Visual Studio Code` and `Docker` for devops and better integration with CLI tools
+- `Visual Studio Code`, `Tabby` and `Docker` for devops and better integration with CLI tools
 - `WinBoat` for running windows apps with a near seamless experience
 - `LACT` for GPU metrics, fan control and overclocking
 
