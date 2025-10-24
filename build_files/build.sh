@@ -26,8 +26,7 @@ install_rpm() {
     rm -rf "$tmpdir"
 }
 
-# Create Repo Files
-# FFMPEG and Codecs
+# Repo Configs
 tee /etc/yum.repos.d/rpmfusion-free.repo <<'EOF'
 [rpmfusion-free]
 name=RPM Fusion for Fedora $releasever
@@ -37,7 +36,6 @@ gpgcheck=1
 gpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-free-fedora-$releasever
 EOF
 
-# Docker CE
 rpm --import https://download.docker.com/linux/fedora/gpg
 tee /etc/yum.repos.d/docker-ce.repo <<'EOF'
 [docker-ce]
@@ -48,7 +46,6 @@ gpgcheck=1
 gpgkey=https://download.docker.com/linux/fedora/gpg
 EOF
 
-# Visual Studio Code
 rpm --import https://packages.microsoft.com/keys/microsoft.asc
 tee /etc/yum.repos.d/vscode.repo <<'EOF'
 [vscode]
@@ -59,7 +56,6 @@ gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
 
-# LACT
 rpm --import https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
 tee /etc/yum.repos.d/lact.repo <<'EOF'
 [lact]
@@ -71,22 +67,18 @@ gpgkey=https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
 EOF
 
 # Install Packages
-# Tools, Drivers, Steam, Code, LACT, Docker
 dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
-dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264 libratbag-ratbagd docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code lact mangohud gamescope steam
+dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugin-openh264 libratbag-ratbagd docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code lact mangohud gamescope steam python3-pip python3-pyicu
+
+install_rpm "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboat-0.8.7-x86_64.rpm" winboat
+
+install_rpm "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm" Bitwarden
+
+install_rpm "https://github.com/Eugeny/tabby/releases/download/v1.0.228/tabby-1.0.228-linux-x64.rpm" Tabby
 
 # Misc Removals
 dnf5 -y remove '*-firmware' thermald firefox --exclude='nvidia-gpu-firmware' --exclude='amd-ucode-firmware' --exclude='linux-firmware*' --exclude='realtek-firmware'
-
-# WinBoat
-install_rpm "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboat-0.8.7-x86_64.rpm" winboat
-
-# Bitwarden
-install_rpm "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm" Bitwarden
-
-# Tabby
-install_rpm "https://github.com/Eugeny/tabby/releases/download/v1.0.228/tabby-1.0.228-linux-x64.rpm" Tabby
 
 # Enable Services
 systemctl enable ratbagd.service docker.service containerd.service lactd.service
