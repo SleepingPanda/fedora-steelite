@@ -6,7 +6,7 @@ set -eoux pipefail
 tee /etc/yum.repos.d/rpmfusion-free.repo <<'EOF'
 [rpmfusion-free]
 name=RPM Fusion for Fedora $releasever
-baseurl=http://download1.rpmfusion.org/free/fedora/development/$releasever/Everything/$basearch/os/
+baseurl=http://download1.rpmfusion.org/free/fedora/releases/$releasever/Everything/$basearch/os/
 enabled=0
 gpgcheck=1
 gpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-free-fedora-$releasever
