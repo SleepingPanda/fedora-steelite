@@ -92,6 +92,13 @@ tee /etc/systemd/journald.conf.d/00-journal-size.conf <<'EOF'
 SystemMaxUse=150M
 EOF
 
+mkdir -p /etc/systemd/zram-generator.conf.d
+tee /etc/systemd/zram-generator.conf.d/00-override.conf <<'EOF'
+[zram0]
+zram-fraction = 0.75
+max-zram-size = 12288
+EOF
+
 tee /etc/tmpfiles.d/coredump.conf <<'EOF'
 d /var/lib/systemd/coredump 0755 root root 3d
 EOF
