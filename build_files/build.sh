@@ -99,6 +99,13 @@ zram-fraction = 0.75
 max-zram-size = 12288
 EOF
 
+tee -a /etc/sysctl.d/99-zram-swap.conf <<'EOF'
+vm.swappiness=10
+vm.vfs_cache_pressure=50
+vm.dirty_ratio=10
+vm.dirty_background_ratio=5
+EOF
+
 tee /etc/tmpfiles.d/coredump.conf <<'EOF'
 d /var/lib/systemd/coredump 0755 root root 3d
 EOF
