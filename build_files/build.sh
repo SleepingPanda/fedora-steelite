@@ -51,10 +51,10 @@ tee /etc/yum.repos.d/webapp-manager.repo <<'EOF'
 [kylegospo:webapp-manager]
 name=webapp-manager
 baseurl=https://download.copr.fedorainfracloud.org/results/kylegospo/webapp-manager/fedora-$releasever-$basearch/
-gpgcheck=1
-gpgkey=https://download.copr.fedorainfracloud.org/results/kylegospo/webapp-manager/pubkey.gpg
 enabled=0
 enabled_metadata=1
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/kylegospo/webapp-manager/pubkey.gpg
 EOF
 
 # Install Packages
