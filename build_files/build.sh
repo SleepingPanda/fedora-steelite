@@ -8,6 +8,7 @@ tee /etc/yum.repos.d/rpmfusion-free.repo <<'EOF'
 name=RPM Fusion for Fedora $releasever
 baseurl=http://download1.rpmfusion.org/free/fedora/releases/$releasever/Everything/$basearch/os/
 enabled=0
+enabled_metadata=1
 gpgcheck=1
 gpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-free-fedora-$releasever
 EOF
@@ -18,6 +19,7 @@ tee /etc/yum.repos.d/docker-ce.repo <<'EOF'
 name=Docker CE
 baseurl=https://download.docker.com/linux/fedora/$releasever/$basearch/stable
 enabled=0
+enabled_metadata=1
 gpgcheck=1
 gpgkey=https://download.docker.com/linux/fedora/gpg
 EOF
@@ -28,6 +30,7 @@ tee /etc/yum.repos.d/vscode.repo <<'EOF'
 name=Visual Studio Code
 baseurl=https://packages.microsoft.com/yumrepos/vscode
 enabled=0
+enabled_metadata=1
 gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
@@ -38,6 +41,7 @@ tee /etc/yum.repos.d/lact.repo <<'EOF'
 name=LACT
 baseurl=https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/fedora-$releasever-$basearch/
 enabled=0
+enabled_metadata=1
 gpgcheck=1
 gpgkey=https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
 EOF
@@ -50,6 +54,7 @@ baseurl=https://download.copr.fedorainfracloud.org/results/kylegospo/webapp-mana
 gpgcheck=1
 gpgkey=https://download.copr.fedorainfracloud.org/results/kylegospo/webapp-manager/pubkey.gpg
 enabled=0
+enabled_metadata=1
 EOF
 
 # Install Packages
