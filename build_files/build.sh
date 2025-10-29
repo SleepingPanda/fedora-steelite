@@ -42,10 +42,20 @@ gpgcheck=1
 gpgkey=https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
 EOF
 
+rpm --import https://download.copr.fedorainfracloud.org/results/kylegospo/webapp-manager/pubkey.gpg
+tee /etc/yum.repos.d/webapp-manager.repo <<'EOF'
+[kylegospo:webapp-manager]
+name=webapp-manager
+baseurl=https://download.copr.fedorainfracloud.org/results/kylegospo/webapp-manager/fedora-$releasever-$basearch/
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/kylegospo/webapp-manager/pubkey.gpg
+enabled=0
+EOF
+
 # Install Packages
 dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
-dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode --enablerepo=rpmfusion-free rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-vaapi gstreamer1-plugin-openh264 libratbag-ratbagd docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code lact mangohud gamescope steam python3-pip python3-pyicu
+dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=webapp-manager --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode --enablerepo=rpmfusion-free rpmdevtools akmods ksshaskpass libva-nvidia-driver gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-vaapi gstreamer1-plugin-openh264 libratbag-ratbagd docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code lact mangohud gamescope steam python3-pip python3-pyicu webapp-manager
 
 mv /opt{,.bak}
 mkdir /opt
