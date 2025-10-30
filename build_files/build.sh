@@ -138,6 +138,11 @@ tee /etc/udev/rules.d/99-scsi-link-power-performance.rules <<'EOF'
 ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
 EOF
 
+tee /etc/udev/rules.d/80-gpu-reset.rules <<'EOF'
+ACTION=="change", ENV{DEVNAME}=="/dev/dri/card0", ENV{RESET}=="1", ENV{PID}!="0", RUN+="/sbin/kill -9 %E{PID}"
+ACTION=="change", ENV{DEVNAME}=="/dev/dri/card0", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart sddm"
+EOF
+
 grep -E '^gamemode:' /usr/lib/group | tee -a /etc/group
 grep -E '^audio:' /usr/lib/group | tee -a /etc/group
 tee -a /etc/group <<'EOF'
