@@ -48,7 +48,7 @@ EOF
 
 rpm --import https://download.copr.fedorainfracloud.org/results/kylegospo/webapp-manager/pubkey.gpg
 tee /etc/yum.repos.d/webapp-manager.repo <<'EOF'
-[kylegospo:webapp-manager]
+[webapp-manager]
 name=webapp-manager
 baseurl=https://download.copr.fedorainfracloud.org/results/kylegospo/webapp-manager/fedora-$releasever-$basearch/
 enabled=0
