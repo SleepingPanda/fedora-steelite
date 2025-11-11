@@ -66,7 +66,7 @@ ln -sf /usr/lib/Bitwarden/bitwarden-app /usr/bin/bitwarden-app
 chmod 4755 /usr/lib/Bitwarden/chrome-sandbox
 sed -i 's|^Exec=/opt/Bitwarden|Exec=/usr/bin|g' /usr/share/applications/bitwarden.desktop
 
-dnf install -y "https://github.com/Eugeny/tabby/releases/download/v1.0.228/tabby-1.0.228-linux-x64.rpm"
+dnf install -y "https://github.com/Eugeny/tabby/releases/download/v1.0.229/tabby-1.0.229-linux-x64.rpm"
 mv /opt/Tabby /usr/lib/Tabby
 ln -sf /usr/lib/Tabby/tabby /usr/bin/tabby
 chmod 4755 /usr/lib/Tabby/chrome-sandbox
