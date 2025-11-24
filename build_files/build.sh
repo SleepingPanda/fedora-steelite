@@ -53,7 +53,7 @@ dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-
 
 mv /opt{,.bak}
 mkdir /opt
-dnf install -y "https://github.com/TibixDev/winboat/releases/download/v0.8.7/winboat-0.8.7-x86_64.rpm"
+dnf install -y "https://github.com/TibixDev/winboat/releases/download/v0.9.0/winboat-0.9.0-x86_64.rpm"
 mv /opt/winboat /usr/lib/winboat
 ln -sf /usr/lib/winboat/winboat /usr/bin/winboat
 chmod 4755 /usr/lib/winboat/chrome-sandbox
