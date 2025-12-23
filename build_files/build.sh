@@ -49,7 +49,7 @@ EOF
 # Install Packages
 dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
-dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-free --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode akmods android-tools gamescope glycin-thumbnailer ksshaskpass libratbag-ratbagd mangohud rpmdevtools python3-pip python3-pyicu containerd.io docker-ce docker-ce-cli docker-buildx-plugin docker-compose-plugin lact libva-nvidia-driver gstreamer1-plugin-openh264 gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-vaapi steam code
+dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-free --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode akmods android-tools code containerd.io docker-ce docker-ce-cli docker-buildx-plugin docker-compose-plugin earlyoom gamescope glycin-thumbnailer gstreamer1-plugin-openh264 gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-vaapi ksshaskpass lact libratbag-ratbagd libva-nvidia-driver mangohud python3-pip python3-pyicu rpmdevtools steam
 
 mv /opt{,.bak}
 mkdir /opt
@@ -78,8 +78,7 @@ mv /opt{.bak,}
 dnf5 -y remove '*-firmware' thermald firefox --exclude='nvidia-gpu-firmware' --exclude='amd-ucode-firmware' --exclude='linux-firmware*' --exclude='realtek-firmware'
 
 # Enable Services
-systemctl enable ratbagd.service docker.service containerd.service lactd.service
-systemctl --global enable podman-auto-update.timer
+systemctl enable ratbagd.service docker.service containerd.service lactd.service earlyoom.service podman-auto-update.timer
 
 # Configurations and Rules
 tee /usr/lib/sysusers.d/docker.conf <<'EOF'
