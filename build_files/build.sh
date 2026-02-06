@@ -49,7 +49,7 @@ EOF
 # Install Packages
 dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
-dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-free --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode akmods android-tools code containerd.io docker-ce docker-ce-cli docker-buildx-plugin docker-compose-plugin gamescope glycin-thumbnailer gstreamer1-plugin-openh264 gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-vaapi ksshaskpass lact libratbag-ratbagd libva-nvidia-driver mangohud python3-pip python3-pyicu rpmdevtools steam
+dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-free --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode akmods android-tools code containerd.io docker-ce docker-ce-cli docker-buildx-plugin docker-compose-plugin gamescope glycin-thumbnailer gstreamer1-plugin-openh264 gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-vaapi ksshaskpass lact libgee libratbag-ratbagd libva-nvidia-driver mangohud python3-pip python3-pyicu rpmdevtools steam
 
 mv /opt{,.bak}
 mkdir /opt
