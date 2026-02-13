@@ -15,4 +15,4 @@
 
 ## NOTE
 
-This is not meant for regular users in its current state. You would be better served by nstalling Fedora like a normal person! If you still want to make the jump for some reason, be sure to carefully examine build_files\build.sh before installing!
+This is not meant for regular users in its current state. You would be better served by installing Fedora like a normal person! If you still want to make the jump for some reason, be sure to carefully examine build_files\build.sh before installing!
