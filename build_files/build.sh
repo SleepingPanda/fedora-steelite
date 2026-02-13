@@ -51,28 +51,11 @@ dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-free --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode akmods android-tools code containerd.io docker-ce docker-ce-cli docker-buildx-plugin docker-compose-plugin gamescope glycin-thumbnailer gstreamer1-plugin-openh264 gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-vaapi ksshaskpass lact libgee libratbag-ratbagd libva-nvidia-driver mangohud python3-pip python3-pyicu rpmdevtools steam
 
-mv /opt{,.bak}
-mkdir /opt
 dnf install -y "https://github.com/TibixDev/winboat/releases/download/v0.9.0/winboat-0.9.0-x86_64.rpm"
-mv /opt/winboat /usr/lib/winboat
-ln -sf /usr/lib/winboat/winboat /usr/bin/winboat
-chmod 4755 /usr/lib/winboat/chrome-sandbox
-sed -i 's|^Exec=/opt/winboat|Exec=/usr/bin|g' /usr/share/applications/winboat.desktop
 
 dnf install -y "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm"
-mv /opt/Bitwarden /usr/lib/Bitwarden
-ln -sf /usr/lib/Bitwarden/bitwarden /usr/bin/bitwarden
-ln -sf /usr/lib/Bitwarden/bitwarden-app /usr/bin/bitwarden-app
-chmod 4755 /usr/lib/Bitwarden/chrome-sandbox
-sed -i 's|^Exec=/opt/Bitwarden|Exec=/usr/bin|g' /usr/share/applications/bitwarden.desktop
 
 dnf install -y "https://github.com/Eugeny/tabby/releases/download/v1.0.229/tabby-1.0.229-linux-x64.rpm"
-mv /opt/Tabby /usr/lib/Tabby
-ln -sf /usr/lib/Tabby/tabby /usr/bin/tabby
-chmod 4755 /usr/lib/Tabby/chrome-sandbox
-sed -i 's|^Exec=/opt/Tabby|Exec=/usr/bin|g' /usr/share/applications/tabby.desktop
-rmdir /opt
-mv /opt{.bak,}
 
 # Misc Removals
 dnf5 -y remove '*-firmware' thermald firefox --exclude='nvidia-gpu-firmware' --exclude='amd-ucode-firmware' --exclude='linux-firmware*' --exclude='realtek-firmware'
@@ -133,6 +116,7 @@ EOF
 
 grep -E '^gamemode:' /usr/lib/group | tee -a /etc/group
 grep -E '^audio:' /usr/lib/group | tee -a /etc/group
+
 tee -a /etc/group <<'EOF'
 docker:x:998:
 EOF
