@@ -57,6 +57,8 @@ dnf install -y "https://bitwarden.com/download/?app=desktop&platform=linux&varia
 
 dnf install -y "https://github.com/Eugeny/tabby/releases/download/v1.0.229/tabby-1.0.229-linux-x64.rpm"
 
+dnf install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download/v3.0.2/appimage-thumbnailer-v3.0.2-1.x86_64.rpm"
+
 # Misc Removals
 dnf5 -y remove '*-firmware' thermald firefox --exclude='nvidia-gpu-firmware' --exclude='amd-ucode-firmware' --exclude='linux-firmware*' --exclude='realtek-firmware'
 
