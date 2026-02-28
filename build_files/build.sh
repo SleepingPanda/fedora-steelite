@@ -104,7 +104,11 @@ dnf5 install -y "https://github.com/Eugeny/tabby/releases/download/v${TABBY_VERS
 dnf5 install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download/v${APPIMAGE_THUMBNAILER_VERSION}/appimage-thumbnailer-v${APPIMAGE_THUMBNAILER_VERSION}-1.x86_64.rpm"
 
 # Misc Removals
-dnf5 -y remove '*-firmware' thermald firefox --exclude='nvidia-gpu-firmware' --exclude='amd-ucode-firmware' --exclude='linux-firmware*' --exclude='realtek-firmware'
+dnf5 -y remove '*-firmware' thermald firefox \
+    --exclude='nvidia-gpu-firmware' \
+    --exclude='amd-ucode-firmware' \
+    --exclude='linux-firmware*' \
+    --exclude='realtek-firmware'
 
 # Enable Services
 systemctl enable ratbagd.service docker.service containerd.service lactd.service podman-auto-update.timer
