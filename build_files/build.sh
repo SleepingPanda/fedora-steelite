@@ -2,6 +2,9 @@
 
 set -eoux pipefail
 
+## Remove the symlink and replace with a real directory to make /opt immutable.
+rm -rf /opt && mkdir /opt
+
 # Repo Configs
 tee /etc/yum.repos.d/rpmfusion-free.repo <<'EOF'
 [rpmfusion-free]
@@ -51,13 +54,13 @@ dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-free --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode akmods android-tools code containerd.io docker-ce docker-ce-cli docker-buildx-plugin docker-compose-plugin gamescope glycin-thumbnailer gstreamer1-plugin-openh264 gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-vaapi ksshaskpass lact libgee libratbag-ratbagd libva-nvidia-driver mangohud python3-pip python3-pyicu rpmdevtools steam
 
-dnf install -y "https://github.com/TibixDev/winboat/releases/download/v0.9.0/winboat-0.9.0-x86_64.rpm"
+dnf5 install -y "https://github.com/TibixDev/winboat/releases/download/v0.9.0/winboat-0.9.0-x86_64.rpm"
 
-dnf install -y "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm"
+dnf5 install -y "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm"
 
-dnf install -y "https://github.com/Eugeny/tabby/releases/download/v1.0.229/tabby-1.0.229-linux-x64.rpm"
+dnf5 install -y "https://github.com/Eugeny/tabby/releases/download/v1.0.229/tabby-1.0.229-linux-x64.rpm"
 
-dnf install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download/v3.0.2/appimage-thumbnailer-v3.0.2-1.x86_64.rpm"
+dnf5 install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download/v3.0.2/appimage-thumbnailer-v3.0.2-1.x86_64.rpm"
 
 # Misc Removals
 dnf5 -y remove '*-firmware' thermald firefox --exclude='nvidia-gpu-firmware' --exclude='amd-ucode-firmware' --exclude='linux-firmware*' --exclude='realtek-firmware'

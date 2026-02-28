@@ -23,8 +23,6 @@ FROM quay.io/fedora/fedora-kinoite:43
 ## Uncomment the following line if one desires to make /opt immutable and be able to be used
 ## by the package manager.
 
-RUN rm -rf /opt && mkdir /opt
-
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
