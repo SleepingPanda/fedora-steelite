@@ -12,7 +12,7 @@ rm -rf /opt && mkdir /opt
 # https://github.com/TibixDev/winboat/releases
 WINBOAT_VERSION="0.9.0"
 # https://github.com/Eugeny/tabby/releases
-TABBY_VERSION="1.0.229"
+TABBY_VERSION="1.0.230"
 # https://github.com/kem-a/appimage-thumbnailer/releases
 APPIMAGE_THUMBNAILER_VERSION="3.0.2"
 
