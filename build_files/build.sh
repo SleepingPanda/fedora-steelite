@@ -60,10 +60,39 @@ gpgcheck=1
 gpgkey=https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
 EOF
 
-# Install Packages
+# Install packages from repos
 dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
-dnf5 -y install --enablerepo=docker-ce --enablerepo=lact --enablerepo=rpmfusion-free --enablerepo=rpmfusion-nonfree-steam --enablerepo=vscode akmods android-tools code containerd.io docker-ce docker-ce-cli docker-buildx-plugin docker-compose-plugin gamescope glycin-thumbnailer gstreamer1-plugin-openh264 gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-vaapi ksshaskpass lact libgee libratbag-ratbagd libva-nvidia-driver mangohud python3-pip python3-pyicu rpmdevtools steam
+dnf5 -y install \
+    --enablerepo=docker-ce \
+    --enablerepo=lact \
+    --enablerepo=rpmfusion-free \
+    --enablerepo=rpmfusion-nonfree-steam \
+    --enablerepo=vscode \
+    akmods \
+    android-tools \
+    code \
+    containerd.io \
+    docker-ce \
+    docker-ce-cli \
+    docker-buildx-plugin \
+    docker-compose-plugin \
+    gamescope \
+    glycin-thumbnailer \
+    gstreamer1-plugin-openh264 \
+    gstreamer1-plugins-bad-freeworld \
+    gstreamer1-plugins-ugly \
+    gstreamer1-vaapi \
+    ksshaskpass \
+    lact \
+    libgee \
+    libratbag-ratbagd \
+    libva-nvidia-driver \
+    mangohud \
+    python3-pip \
+    python3-pyicu \
+    rpmdevtools \
+    steam
 
 # Install direct RPMs — kept in a separate block so failures are easy to isolate
 dnf5 install -y "https://github.com/TibixDev/winboat/releases/download/v${WINBOAT_VERSION}/winboat-${WINBOAT_VERSION}-x86_64.rpm"
