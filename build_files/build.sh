@@ -164,13 +164,5 @@ ACTION=="change", ENV{DEVNAME}=="/dev/dri/card0", ENV{RESET}=="1", ENV{PID}!="0"
 ACTION=="change", ENV{DEVNAME}=="/dev/dri/card0", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart sddm"
 EOF
 
-grep -E '^gamemode:' /usr/lib/group | tee -a /etc/group
-grep -E '^audio:' /usr/lib/group | tee -a /etc/group
-
-tee -a /etc/group <<'EOF'
-docker:x:998:
-EOF
-
 # Cleanup
 dnf5 -y clean all
-rm -rf /var/lib/dnf
