@@ -14,7 +14,7 @@ WINBOAT_VERSION="0.9.0"
 # https://github.com/Eugeny/tabby/releases
 TABBY_VERSION="1.0.230"
 # https://github.com/kem-a/appimage-thumbnailer/releases
-APPIMAGE_THUMBNAILER_VERSION="3.0.2"
+APPIMAGE_THUMBNAILER_VERSION="4.0.0"
 
 # Repo Configs
 tee /etc/yum.repos.d/rpmfusion-free.repo <<'EOF'
