@@ -305,6 +305,15 @@ tee /etc/security/limits.d/99-audio-realtime.conf <<'EOF'
 @audio   -  memlock  unlimited
 EOF
 
+# Reduce service start/stop timeouts from the 90s default. On a desktop/gaming
+# system a hung unit shouldn't hold up the session or shutdown for that long.
+mkdir -p /etc/systemd/system.conf.d
+tee /etc/systemd/system.conf.d/00-timeouts.conf <<'EOF'
+[Manager]
+DefaultTimeoutStartSec=30s
+DefaultTimeoutStopSec=15s
+EOF
+
 # GPU reset rules for /dev/dri/card0:
 #   - On a GPU reset event, kill the owning PID to release the hung context
 #   - If the display server (SDDM) is involved, restart it to recover the
