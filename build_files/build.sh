@@ -209,10 +209,26 @@ max-zram-size = 12288
 EOF
 
 # Kernel tuning for ZRAM swap:
+#   vm.swappiness=180             — high swappiness is correct for ZRAM; unlike
+#                                   slow disk swap, ZRAM is RAM-speed compressed
+#                                   memory so the kernel should use it freely.
+#                                   Kernels 5.8+ support values up to 200.
+#   vm.page-cluster=0             — disable swap read-ahead; ZRAM has no seek
+#                                   penalty so prefetching clusters is pure waste
 #   vm.vfs_cache_pressure=50      — balanced inode/dentry cache reclaim
 #   vm.dirty_ratio=10             — flush dirty pages when 10% of RAM is dirty
 #   vm.dirty_background_ratio=5   — start background writeback at 5%
+#   vm.max_map_count=1048576      — many Proton/Wine games require a high memory
+#                                   map count; the default (65530) causes silent
+#                                   crashes or launch failures in some titles
+#   fs.inotify.max_user_watches   — VS Code and large dev projects exhaust the
+#   fs.inotify.max_user_instances   default limits, causing file watchers to
+#                                   silently stop working
+#   kernel.perf_event_paranoid=1  — allows unprivileged perf access needed by
+#                                   MangoHud and other overlay/profiling tools
 tee /etc/sysctl.d/99-zram-swap.conf <<'EOF'
+vm.swappiness=180
+vm.page-cluster=0
 vm.vfs_cache_pressure=50
 vm.dirty_ratio=10
 vm.dirty_background_ratio=5
