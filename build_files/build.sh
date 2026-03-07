@@ -22,6 +22,7 @@ TABBY_VERSION="1.0.230"
 # https://github.com/kem-a/appimage-thumbnailer/releases
 APPIMAGE_THUMBNAILER_VERSION="4.0.0"
 
+
 # =============================================================================
 # Repo Configuration
 # Each block imports the signing key and drops a .repo file into yum.repos.d.
@@ -76,6 +77,7 @@ gpgcheck=1
 gpgkey=https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
 EOF
 
+
 # =============================================================================
 # Package Installation
 # =============================================================================
@@ -88,26 +90,36 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 # Install all repo-based packages in a single transaction for efficiency.
 # Repos are enabled inline rather than globally to avoid polluting the default
 # metadata cache.
-#   akmods                    — builds kernel modules (e.g. NVIDIA) on upgrade
+#
+# Development tools:
 #   android-tools             — ADB/fastboot for Android device management
 #   code                      — Visual Studio Code editor
-#   containerd.io             — container runtime required by Docker CE
-#   docker-ce / cli / plugins — Docker engine, CLI, buildx, and compose
-#   gamescope                 — Valve's micro-compositor for gaming sessions
-#   glycin-thumbnailer        — GNOME image thumbnailer
-#   gstreamer1-plugin-*       — additional codec support (H.264, ugly/bad sets)
-#   gstreamer1-vaapi          — VA-API hardware video decode/encode via GStreamer
-#   ksshaskpass               — KDE SSH passphrase dialog (integrates with KWallet)
-#   lact                      — AMD GPU control application
-#   libgee                    — GLib collection library (LACT dependency)
-#   libratbag-ratbagd         — gaming mouse configuration daemon
-#   libva-nvidia-driver       — VA-API backend for NVIDIA GPUs
-#   mangohud                  — in-game performance overlay
-#   nvme-cli                   — NVMe drive management and monitoring CLI
 #   python3-pip               — Python package installer
 #   python3-pyicu             — Python bindings for ICU (Unicode/locale support)
 #   rpmdevtools               — RPM packaging utilities
+#
+# Docker:
+#   containerd.io             — container runtime required by Docker CE
+#   docker-ce / cli / plugins — Docker engine, CLI, buildx, and compose
+#
+# Gaming:
+#   gamescope                 — Valve's micro-compositor for gaming sessions
+#   libratbag-ratbagd         — gaming mouse configuration daemon
+#   mangohud                  — in-game performance overlay
 #   steam                     — Valve Steam client
+#
+# GPU & Media:
+#   akmods                    — builds kernel modules (e.g. NVIDIA) on upgrade
+#   gstreamer1-plugin-*       — additional codec support (H.264, ugly/bad sets)
+#   gstreamer1-vaapi          — VA-API hardware video decode/encode via GStreamer
+#   lact                      — AMD GPU control application
+#   libgee                    — GLib collection library (LACT dependency)
+#   libva-nvidia-driver       — VA-API backend for NVIDIA GPUs
+#
+# System:
+#   glycin-thumbnailer        — GNOME image thumbnailer
+#   ksshaskpass               — KDE SSH passphrase dialog (integrates with KWallet)
+#   nvme-cli                  — NVMe drive management and monitoring CLI
 dnf5 -y install \
     --enablerepo=docker-ce \
     --enablerepo=lact \
@@ -155,11 +167,12 @@ dnf5 install -y "https://github.com/Eugeny/tabby/releases/download/v${TABBY_VERS
 # AppImage Thumbnailer — generates thumbnails for AppImage files in file managers
 dnf5 install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download/v${APPIMAGE_THUMBNAILER_VERSION}/appimage-thumbnailer-v${APPIMAGE_THUMBNAILER_VERSION}-1.x86_64.rpm"
 
+
 # =============================================================================
 # Package Removal
 # Strip out packages that are unnecessary in this image to reduce size.
-# Critical firmware blobs (NVIDIA, AMD µcode, linux-firmware, Realtek) and the kernel are
-# explicitly excluded so hardware support is not broken.
+# Critical firmware blobs (NVIDIA, AMD µcode, linux-firmware, Realtek) and
+# the kernel are explicitly excluded so hardware support is not broken.
 # =============================================================================
 dnf5 -y remove '*-firmware' thermald firefox \
     --exclude='nvidia-gpu-firmware' \
@@ -169,41 +182,90 @@ dnf5 -y remove '*-firmware' thermald firefox \
     --exclude='kernel' \
     --exclude='kernel-*'
 
-# =============================================================================
-# System Configuration
-# =============================================================================
 
-# Create the 'input', 'gamemode', 'docker' and 'audio' system groups with a 
-# fixed GID so bind-mounted socket permissions are consistent across rebuilds
+# =============================================================================
+# System Groups
+# Create system groups with fixed GIDs so bind-mounted socket permissions are
+# consistent across rebuilds.
+# =============================================================================
 tee /usr/lib/sysusers.d/steelite.conf <<'EOF'
-g audio 63
+g audio    63
+g input   104
 g gamemode 984
-g input 104
-g docker 998
+g docker  998
 EOF
 
-# Load the ntsync kernel module at boot — improves Wine/Proton synchronization
-# performance by providing a native futex-based NT sync mechanism
+
+# =============================================================================
+# Kernel Modules
+# =============================================================================
+
+# Load the ntsync module at boot — provides a native futex-based NT sync
+# mechanism that improves Wine/Proton synchronization performance
 tee /etc/modules-load.d/ntsync.conf <<'EOF'
 ntsync
 EOF
 
-# Disable NVMe power management latency — prevents it from
-# downclocking its internal controller during I/O bursts
+# Disable NVMe power management latency tolerance — prevents the controller
+# from downclocking during I/O bursts
 tee /etc/modprobe.d/nvme.conf <<'EOF'
 options nvme_core default_ps_max_latency_us=0
 EOF
 
-# Cap the systemd journal at 150 MB to prevent unbounded disk usage
-mkdir -p /etc/systemd/journald.conf.d
-tee /etc/systemd/journald.conf.d/00-journal-size.conf <<'EOF'
-[Journal]
-SystemMaxUse=150M
+
+# =============================================================================
+# Kernel Tunables (sysctl)
+# =============================================================================
+
+# Memory management — tuned for ZRAM swap:
+#   vm.swappiness=150           — high swappiness is correct for ZRAM; unlike
+#                                 slow disk swap, ZRAM is RAM-speed compressed
+#                                 memory so the kernel should use it freely.
+#                                 Kernels 5.8+ support values up to 200.
+#   vm.page-cluster=0           — disable swap read-ahead; ZRAM has no seek
+#                                 penalty so prefetching clusters is pure waste
+#   vm.vfs_cache_pressure=50    — balanced inode/dentry cache reclaim
+#   vm.dirty_ratio=10           — flush dirty pages when 10% of RAM is dirty
+#   vm.dirty_background_ratio=5 — start background writeback at 5%
+tee /etc/sysctl.d/99-memory.conf <<'EOF'
+vm.swappiness=150
+vm.page-cluster=0
+vm.vfs_cache_pressure=50
+vm.dirty_ratio=10
+vm.dirty_background_ratio=5
 EOF
 
-# ZRAM swap configuration — use 50% of RAM up to 16 GB as a compressed swap
-# device, which reduces I/O on SSDs and improves responsiveness under memory
-# pressure
+# Gaming and development tunables:
+#   vm.max_map_count=1048576      — many Proton/Wine games require a high memory
+#                                   map count; the default (65530) causes silent
+#                                   crashes or launch failures in some titles
+#   fs.inotify.max_user_watches   — VS Code and large dev projects exhaust the
+#   fs.inotify.max_user_instances   default limits, causing file watchers to
+#                                   silently stop working
+#   kernel.perf_event_paranoid=1  — allows unprivileged perf access needed by
+#                                   MangoHud and other overlay/profiling tools
+#   kernel.sched_migration_cost_ns — FX CPUs expose SMT-like topology but with
+#   kernel.sched_autogroup_enabled   shared FPUs; these help the scheduler pack
+#                                    work efficiently onto modules
+#   kernel.numa_balancing=0       — NUMA balancing adds overhead with no benefit
+#                                   on single-socket desktop systems
+tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
+vm.max_map_count=1048576
+fs.inotify.max_user_watches=524288
+fs.inotify.max_user_instances=512
+kernel.perf_event_paranoid=1
+kernel.sched_migration_cost_ns=5000000
+kernel.sched_autogroup_enabled=1
+kernel.numa_balancing=0
+EOF
+
+
+# =============================================================================
+# Memory — ZRAM & Transparent Huge Pages
+# =============================================================================
+
+# ZRAM swap — use 50% of RAM up to 16 GB as a compressed swap device, which
+# reduces I/O on SSDs and improves responsiveness under memory pressure
 mkdir -p /etc/systemd/zram-generator.conf.d
 tee /etc/systemd/zram-generator.conf.d/00-override.conf <<'EOF'
 [zram0]
@@ -212,16 +274,28 @@ max-zram-size = 16384
 compression-algorithm = zstd
 EOF
 
+# Transparent Huge Pages:
+#   defrag=defer+madvise — only defrag on madvise() calls or async; avoids
+#                          stalls in latency-sensitive workloads (games, audio)
+#   max_ptes_none=409    — allow khugepaged to collapse more zero-page PTEs,
+#                          improving memory efficiency for large allocations
+tee /etc/tmpfiles.d/thp.conf <<'EOF'
+w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 409
+EOF
+
+
+# =============================================================================
+# systemd — OOM, Timeouts & Journal
+# =============================================================================
+
 # Tune systemd-oomd to act more aggressively than its conservative defaults.
 # Without this, oomd can let memory pressure build too long before killing
 # anything, effectively negating its purpose on a gaming system.
-#   SwapUsedLimit=70%                  — intervene when swap is 70% full
-#   DefaultMemoryPressureLimit=50%     — trigger on sustained 50% PSI memory
-#                                        pressure (vs the default 60%, but
-#                                        combined with a shorter duration below
-#                                        this makes it much more responsive)
-#   DefaultMemoryPressureDurationSec=8s — act after 8s of sustained pressure
-#                                          rather than the default 30s
+#   SwapUsedLimit=70%                — intervene when swap is 70% full
+#   DefaultMemoryPressureLimit=50%   — trigger on sustained 50% PSI memory
+#                                      pressure (vs. the default 60%)
+#   DefaultMemoryPressureDurationSec — act after 8s rather than the default 30s
 mkdir -p /etc/systemd/oomd.conf.d
 tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
 [OOM]
@@ -239,56 +313,11 @@ DefaultTimeoutStartSec=30s
 DefaultTimeoutStopSec=15s
 EOF
 
-# FX CPUs expose SMT-like topology but with shared FPUs — these help
-# the scheduler pack work more efficiently onto modules
-tee /etc/sysctl.d/99-amd-fx.conf <<'EOF'
-kernel.sched_migration_cost_ns=5000000
-kernel.sched_autogroup_enabled=1
-EOF
-
-# Kernel tuning for ZRAM swap:
-#   vm.swappiness=150             — high swappiness is correct for ZRAM; unlike
-#                                   slow disk swap, ZRAM is RAM-speed compressed
-#                                   memory so the kernel should use it freely.
-#                                   Kernels 5.8+ support values up to 200.
-#   vm.page-cluster=0             — disable swap read-ahead; ZRAM has no seek
-#                                   penalty so prefetching clusters is pure waste
-#   vm.vfs_cache_pressure=50      — balanced inode/dentry cache reclaim
-#   vm.dirty_ratio=10             — flush dirty pages when 10% of RAM is dirty
-#   vm.dirty_background_ratio=5   — start background writeback at 5%
-#   vm.max_map_count=1048576      — many Proton/Wine games require a high memory
-#                                   map count; the default (65530) causes silent
-#                                   crashes or launch failures in some titles
-#   fs.inotify.max_user_watches   — VS Code and large dev projects exhaust the
-#   fs.inotify.max_user_instances   default limits, causing file watchers to
-#                                   silently stop working
-#   kernel.perf_event_paranoid=1  — allows unprivileged perf access needed by
-#                                   MangoHud and other overlay/profiling tools
-tee /etc/sysctl.d/99-zram-swap.conf <<'EOF'
-vm.swappiness=150
-vm.page-cluster=0
-vm.vfs_cache_pressure=50
-vm.dirty_ratio=10
-vm.dirty_background_ratio=5
-EOF
-
-# Gaming and development kernel tunables:
-#   vm.max_map_count=1048576      — many Proton/Wine games require a high memory
-#                                   map count; the default (65530) causes silent
-#                                   crashes or launch failures in some titles
-#   fs.inotify.max_user_watches   — VS Code and large dev projects exhaust the
-#   fs.inotify.max_user_instances   default limits, causing file watchers to
-#                                   silently stop working
-#   kernel.perf_event_paranoid=1  — allows unprivileged perf access needed by
-#                                   MangoHud and other overlay/profiling tools
-#   kernel.numa_balancing=0       — NUMA balancing adds overhead with no benefit 
-#                                   on single-socket desktop systems like the FX #                                   platform.
-tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
-vm.max_map_count=1048576
-fs.inotify.max_user_watches=524288
-fs.inotify.max_user_instances=512
-kernel.perf_event_paranoid=1
-kernel.numa_balancing=0
+# Cap the systemd journal at 150 MB to prevent unbounded disk usage
+mkdir -p /etc/systemd/journald.conf.d
+tee /etc/systemd/journald.conf.d/00-journal-size.conf <<'EOF'
+[Journal]
+SystemMaxUse=150M
 EOF
 
 # Retain core dumps for 3 days, then clean them up automatically
@@ -296,15 +325,10 @@ tee /etc/tmpfiles.d/coredump.conf <<'EOF'
 d /var/lib/systemd/coredump 0755 root root 3d
 EOF
 
-# Transparent Huge Pages tuning:
-#   defrag=defer+madvise  — only defrag on madvise() calls or async; avoids
-#                           stalls in latency-sensitive workloads (games, audio)
-#   max_ptes_none=409     — allow khugepaged to collapse more zero-page PTEs,
-#                           improving memory efficiency for large allocations
-tee /etc/tmpfiles.d/thp.conf <<'EOF'
-w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 409
-EOF
+
+# =============================================================================
+# Audio — Realtime Scheduling
+# =============================================================================
 
 # Allow the 'audio' group to run threads at realtime priority and lock
 # unlimited memory, which PipeWire and JACK require for glitch-free low-latency
@@ -317,30 +341,46 @@ EOF
 
 # Grant the 'audio' group access to /dev/cpu_dma_latency so real-time audio
 # applications (e.g. JACK, PipeWire) can set low DMA latency without root
-tee /etc/udev/rules.d/60-cpu-dma-latency-permissions.rules <<'EOF'
+tee /etc/udev/rules.d/60-cpu-dma-latency.rules <<'EOF'
 DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
 EOF
 
-# NVMe drives — bypass the kernel scheduler entirely
-# Rotational HDDs — use BFQ for latency fairness
-# SSDs (non-NVMe) — use mq-deadline
+
+# =============================================================================
+# Storage — I/O Schedulers & Link Power
+# =============================================================================
+
+# Per-device I/O scheduler policy:
+#   NVMe  — bypass the kernel scheduler entirely (device has its own queuing)
+#   HDDs  — use BFQ for latency fairness across competing processes
+#   SSDs  — use mq-deadline for low-latency sequential I/O
 tee /etc/udev/rules.d/60-ioschedulers.rules <<'EOF'
 ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="none"
-
 ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"
-
 ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
 EOF
 
+# Force SCSI/SATA link power management to max_performance, preventing the
+# host controller from downclocking links to save power (avoids I/O latency
+# spikes on spinning drives and some SSDs)
+tee /etc/udev/rules.d/61-scsi-link-power.rules <<'EOF'
+ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
+EOF
+
+
+# =============================================================================
+# Gaming — Controllers & GPU Recovery
+# =============================================================================
+
 # Grant the 'input' group read/write access to gamepad and joystick nodes so
-# emulators and non-Steam games can read controllers without running as root.
+# emulators and non-Steam games can read controllers without running as root
 tee /etc/udev/rules.d/70-gamepad-permissions.rules <<'EOF'
 SUBSYSTEM=="input", ATTRS{name}=="*Controller*", GROUP="input", MODE="0660"
 SUBSYSTEM=="input", KERNEL=="js[0-9]*", GROUP="input", MODE="0660"
 SUBSYSTEM=="input", KERNEL=="event[0-9]*", ATTRS{name}=="*Controller*", GROUP="input", MODE="0660"
 EOF
 
-# GPU reset rules for /dev/dri/card0:
+# GPU reset recovery for /dev/dri/card0:
 #   - On a GPU reset event, kill the owning PID to release the hung context
 #   - If the display server (SDDM) is involved, restart it to recover the
 #     desktop session cleanly
@@ -349,22 +389,18 @@ ACTION=="change", ENV{DEVNAME}=="/dev/dri/card0", ENV{RESET}=="1", ENV{PID}!="0"
 ACTION=="change", ENV{DEVNAME}=="/dev/dri/card0", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart sddm"
 EOF
 
-# Force SCSI/SATA link power management to max_performance, preventing the
-# host controller from downclocking links to save power (avoids I/O latency
-# spikes on spinning drives and some SSDs)
-tee /etc/udev/rules.d/99-scsi-link-power-performance.rules <<'EOF'
-ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
-EOF
 
 # =============================================================================
 # Service Enablement
-# Units are enabled here so they start automatically on first boot.
-#   ratbagd              — gaming mouse config daemon (libratbag)
-#   docker / containerd  — Docker engine and its container runtime
-#   lactd                — LACT AMD GPU daemon
-#   podman-auto-update   — timer that keeps Podman containers up to date
 # =============================================================================
-systemctl enable ratbagd.service docker.service containerd.service lactd.service podman-auto-update.timer systemd-oomd.service
+systemctl enable \
+    containerd.service \
+    docker.service \
+    lactd.service \
+    podman-auto-update.timer \
+    ratbagd.service \
+    systemd-oomd.service
+
 
 # =============================================================================
 # Cleanup
