@@ -300,13 +300,27 @@ compression-algorithm = zstd
 EOF
 
 # Transparent Huge Pages:
-#   defrag=defer+madvise — only defrag on madvise() calls or async; avoids
-#                          stalls in latency-sensitive workloads (games, audio)
-#   max_ptes_none=409    — allow khugepaged to collapse more zero-page PTEs,
-#                          improving memory efficiency for large allocations
+#   enabled=madvise             — only collapse huge pages for processes that
+#                                 explicitly request them; reduces fragmentation
+#                                 and compaction overhead for everything else
+#   shmem_enabled=advise        — apply the same policy to shared memory
+#                                 (tmpfs, memfd); benefits Proton/Wine shader
+#                                 caches and shared allocations
+#   defrag=defer+madvise        — only defrag on madvise() calls or async;
+#                                 avoids stalls in latency-sensitive workloads
+#                                 (games, audio)
+#   max_ptes_none=409           — allow khugepaged to collapse more zero-page
+#                                 PTEs, improving memory efficiency for large
+#                                 allocations
+#   scan_sleep_millisecs=1000   — slow khugepaged's scan interval to reduce
+#   alloc_sleep_millisecs=60000   background CPU overhead during gaming sessions
 tee /etc/tmpfiles.d/thp.conf <<'EOF'
+w! /sys/kernel/mm/transparent_hugepage/enabled - - - - madvise
+w! /sys/kernel/mm/transparent_hugepage/shmem_enabled - - - - advise
 w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 409
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs - - - - 1000
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/alloc_sleep_millisecs - - - - 60000
 EOF
 
 
