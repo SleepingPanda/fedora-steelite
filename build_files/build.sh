@@ -296,6 +296,15 @@ DefaultMemoryPressureLimit=60%
 DefaultMemoryPressureDurationSec=10s
 EOF
 
+# Allow the 'audio' group to run threads at realtime priority and lock
+# unlimited memory, which PipeWire and JACK require for glitch-free low-latency
+# audio. Without these, audio daemons fall back to non-RT scheduling.
+mkdir -p /etc/security/limits.d
+tee /etc/security/limits.d/99-audio-realtime.conf <<'EOF'
+@audio   -  rtprio   95
+@audio   -  memlock  unlimited
+EOF
+
 # GPU reset rules for /dev/dri/card0:
 #   - On a GPU reset event, kill the owning PID to release the hung context
 #   - If the display server (SDDM) is involved, restart it to recover the
