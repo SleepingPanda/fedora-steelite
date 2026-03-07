@@ -133,6 +133,7 @@ dnf5 -y install \
     libratbag-ratbagd \
     libva-nvidia-driver \
     mangohud \
+    nvme-cli \
     python3-pip \
     python3-pyicu \
     rpmdevtools \
@@ -168,16 +169,6 @@ dnf5 -y remove '*-firmware' thermald firefox \
     --exclude='kernel-*'
 
 # =============================================================================
-# Service Enablement
-# Units are enabled here so they start automatically on first boot.
-#   ratbagd              — gaming mouse config daemon (libratbag)
-#   docker / containerd  — Docker engine and its container runtime
-#   lactd                — LACT AMD GPU daemon
-#   podman-auto-update   — timer that keeps Podman containers up to date
-# =============================================================================
-systemctl enable ratbagd.service docker.service containerd.service lactd.service podman-auto-update.timer systemd-oomd.service
-
-# =============================================================================
 # System Configuration
 # =============================================================================
 
@@ -194,6 +185,12 @@ EOF
 # performance by providing a native futex-based NT sync mechanism
 tee /etc/modules-load.d/ntsync.conf <<'EOF'
 ntsync
+EOF
+
+# Disable NVMe power management latency — prevents it from
+# downclocking its internal controller during I/O bursts
+tee /etc/modprobe.d/nvme.conf <<'EOF'
+options nvme_core default_ps_max_latency_us=0
 EOF
 
 # Cap the systemd journal at 150 MB to prevent unbounded disk usage
@@ -346,6 +343,16 @@ EOF
 tee /etc/udev/rules.d/99-scsi-link-power-performance.rules <<'EOF'
 ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
 EOF
+
+# =============================================================================
+# Service Enablement
+# Units are enabled here so they start automatically on first boot.
+#   ratbagd              — gaming mouse config daemon (libratbag)
+#   docker / containerd  — Docker engine and its container runtime
+#   lactd                — LACT AMD GPU daemon
+#   podman-auto-update   — timer that keeps Podman containers up to date
+# =============================================================================
+systemctl enable ratbagd.service docker.service containerd.service lactd.service podman-auto-update.timer systemd-oomd.service
 
 # =============================================================================
 # Cleanup
