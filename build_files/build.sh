@@ -314,6 +314,14 @@ DefaultTimeoutStartSec=30s
 DefaultTimeoutStopSec=15s
 EOF
 
+# Grant the 'input' group read/write access to gamepad and joystick nodes so
+# emulators and non-Steam games can read controllers without running as root.
+tee /etc/udev/rules.d/70-gamepad-permissions.rules <<'EOF'
+SUBSYSTEM=="input", ATTRS{name}=="*Controller*", GROUP="input", MODE="0660"
+SUBSYSTEM=="input", KERNEL=="js[0-9]*", GROUP="input", MODE="0660"
+SUBSYSTEM=="input", KERNEL=="event[0-9]*", ATTRS{name}=="*Controller*", GROUP="input", MODE="0660"
+EOF
+
 # GPU reset rules for /dev/dri/card0:
 #   - On a GPU reset event, kill the owning PID to release the hung context
 #   - If the display server (SDDM) is involved, restart it to recover the
