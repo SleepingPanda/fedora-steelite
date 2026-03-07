@@ -173,7 +173,7 @@ dnf5 -y remove '*-firmware' thermald firefox \
 #   lactd                — LACT AMD GPU daemon
 #   podman-auto-update   — timer that keeps Podman containers up to date
 # =============================================================================
-systemctl enable ratbagd.service docker.service containerd.service lactd.service podman-auto-update.timer
+systemctl enable ratbagd.service docker.service containerd.service lactd.service podman-auto-update.timer systemd-oomd.service
 
 # =============================================================================
 # System Configuration
@@ -209,12 +209,10 @@ max-zram-size = 12288
 EOF
 
 # Kernel tuning for ZRAM swap:
-#   vm.swappiness=10              — prefer RAM; only swap under real pressure
 #   vm.vfs_cache_pressure=50      — balanced inode/dentry cache reclaim
 #   vm.dirty_ratio=10             — flush dirty pages when 10% of RAM is dirty
 #   vm.dirty_background_ratio=5   — start background writeback at 5%
 tee /etc/sysctl.d/99-zram-swap.conf <<'EOF'
-vm.swappiness=10
 vm.vfs_cache_pressure=50
 vm.dirty_ratio=10
 vm.dirty_background_ratio=5
@@ -246,6 +244,24 @@ EOF
 # spikes on spinning drives and some SSDs)
 tee /etc/udev/rules.d/99-scsi-link-power-performance.rules <<'EOF'
 ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
+EOF
+
+# Tune systemd-oomd to act more aggressively than its conservative defaults.
+# Without this, oomd can let memory pressure build too long before killing
+# anything, effectively negating its purpose on a gaming system.
+#   SwapUsedLimit=80%                  — intervene when swap is 80% full
+#   DefaultMemoryPressureLimit=60%     — trigger on sustained 60% PSI memory
+#                                        pressure (vs the default 60%, but
+#                                        combined with a shorter duration below
+#                                        this makes it much more responsive)
+#   DefaultMemoryPressureDurationSec=10s — act after 10s of sustained pressure
+#                                          rather than the default 30s
+mkdir -p /etc/systemd/oomd.conf.d
+tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
+[OOM]
+SwapUsedLimit=80%
+DefaultMemoryPressureLimit=60%
+DefaultMemoryPressureDurationSec=10s
 EOF
 
 # GPU reset rules for /dev/dri/card0:
