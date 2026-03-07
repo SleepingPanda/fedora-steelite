@@ -103,6 +103,7 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 #   libratbag-ratbagd         — gaming mouse configuration daemon
 #   libva-nvidia-driver       — VA-API backend for NVIDIA GPUs
 #   mangohud                  — in-game performance overlay
+#   nvme-cli                   — NVMe drive management and monitoring CLI
 #   python3-pip               — Python package installer
 #   python3-pyicu             — Python bindings for ICU (Unicode/locale support)
 #   rpmdevtools               — RPM packaging utilities
