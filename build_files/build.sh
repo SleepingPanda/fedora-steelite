@@ -156,14 +156,16 @@ dnf5 install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download
 # =============================================================================
 # Package Removal
 # Strip out packages that are unnecessary in this image to reduce size.
-# Critical firmware blobs (NVIDIA, AMD µcode, linux-firmware, Realtek) are
+# Critical firmware blobs (NVIDIA, AMD µcode, linux-firmware, Realtek) and the kernel are
 # explicitly excluded so hardware support is not broken.
 # =============================================================================
 dnf5 -y remove '*-firmware' thermald firefox \
     --exclude='nvidia-gpu-firmware' \
     --exclude='amd-ucode-firmware' \
     --exclude='linux-firmware*' \
-    --exclude='realtek-firmware'
+    --exclude='realtek-firmware' \
+    --exclude='kernel' \
+    --exclude='kernel-*'
 
 # =============================================================================
 # Service Enablement
