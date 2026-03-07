@@ -201,14 +201,15 @@ tee /etc/systemd/journald.conf.d/00-journal-size.conf <<'EOF'
 SystemMaxUse=150M
 EOF
 
-# ZRAM swap configuration — use 75% of RAM up to 12 GB as a compressed swap
+# ZRAM swap configuration — use 50% of RAM up to 16 GB as a compressed swap
 # device, which reduces I/O on SSDs and improves responsiveness under memory
 # pressure
 mkdir -p /etc/systemd/zram-generator.conf.d
 tee /etc/systemd/zram-generator.conf.d/00-override.conf <<'EOF'
 [zram0]
-zram-fraction = 0.75
-max-zram-size = 12288
+zram-fraction = 0.5
+max-zram-size = 16384
+compression-algorithm = zstd
 EOF
 
 # Tune systemd-oomd to act more aggressively than its conservative defaults.
