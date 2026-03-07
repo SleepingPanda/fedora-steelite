@@ -218,42 +218,67 @@ EOF
 # =============================================================================
 
 # Memory management — tuned for ZRAM swap:
-#   vm.swappiness=150           — high swappiness is correct for ZRAM; unlike
-#                                 slow disk swap, ZRAM is RAM-speed compressed
-#                                 memory so the kernel should use it freely.
-#                                 Kernels 5.8+ support values up to 200.
-#   vm.page-cluster=0           — disable swap read-ahead; ZRAM has no seek
-#                                 penalty so prefetching clusters is pure waste
-#   vm.vfs_cache_pressure=50    — balanced inode/dentry cache reclaim
-#   vm.dirty_ratio=10           — flush dirty pages when 10% of RAM is dirty
-#   vm.dirty_background_ratio=5 — start background writeback at 5%
+#   vm.swappiness=150                — high swappiness is correct for ZRAM; unlike
+#                                      slow disk swap, ZRAM is RAM-speed compressed
+#                                      memory so the kernel should use it freely.
+#                                      Kernels 5.8+ support values up to 200.
+#   vm.page-cluster=0                — disable swap read-ahead; ZRAM has no seek
+#                                      penalty so prefetching clusters is pure waste
+#   vm.vfs_cache_pressure=50         — balanced inode/dentry cache reclaim
+#   vm.dirty_ratio=10                — flush dirty pages when 10% of RAM is dirty
+#   vm.dirty_background_ratio=5      — start background writeback at 5%
+#   vm.compaction_proactiveness=0    — disable proactive compaction; it runs in the
+#                                      background and causes latency spikes that are
+#                                      especially noticeable in games
+#   vm.watermark_boost_factor=0      — disable watermark boosting; it triggers
+#                                      aggressive reclaim after a spiky allocation,
+#                                      wasting CPU on workloads that don't need it
+#   vm.watermark_scale_factor=125    — widen the gap between low/high watermarks so
+#                                      kswapd wakes less often but reclaims more
+#                                      when it does, reducing reclaim churn
 tee /etc/sysctl.d/99-memory.conf <<'EOF'
 vm.swappiness=150
 vm.page-cluster=0
 vm.vfs_cache_pressure=50
 vm.dirty_ratio=10
 vm.dirty_background_ratio=5
+vm.compaction_proactiveness=0
+vm.watermark_boost_factor=0
+vm.watermark_scale_factor=125
 EOF
 
 # Gaming and development tunables:
-#   vm.max_map_count=1048576      — many Proton/Wine games require a high memory
-#                                   map count; the default (65530) causes silent
-#                                   crashes or launch failures in some titles
-#   fs.inotify.max_user_watches   — VS Code and large dev projects exhaust the
-#   fs.inotify.max_user_instances   default limits, causing file watchers to
-#                                   silently stop working
-#   kernel.perf_event_paranoid=1  — allows unprivileged perf access needed by
-#                                   MangoHud and other overlay/profiling tools
-#   kernel.sched_migration_cost_ns — FX CPUs expose SMT-like topology but with
-#   kernel.sched_autogroup_enabled   shared FPUs; these help the scheduler pack
-#                                    work efficiently onto modules
-#   kernel.numa_balancing=0       — NUMA balancing adds overhead with no benefit
-#                                   on single-socket desktop systems
+#   vm.max_map_count=1048576           — many Proton/Wine games require a high memory
+#                                        map count; the default (65530) causes silent
+#                                        crashes or launch failures in some titles
+#   fs.inotify.max_user_watches        — VS Code and large dev projects exhaust the
+#   fs.inotify.max_user_instances        default limits, causing file watchers to
+#                                        silently stop working
+#   kernel.perf_event_paranoid=1       — allows unprivileged perf access needed by
+#                                        MangoHud and other overlay/profiling tools
+#   kernel.nmi_watchdog=0              — disables the NMI watchdog, which generates
+#                                        periodic NMI interrupts for hang detection;
+#                                        unnecessary on a desktop and frees a perf
+#                                        counter on each core
+#   kernel.sched_latency_ns            — target scheduling latency for the CFS
+#   kernel.sched_min_granularity_ns      runqueue; reducing these values lowers
+#   kernel.sched_wakeup_granularity_ns   worst-case response time for interactive
+#                                        and gaming workloads at the cost of slightly
+#                                        higher scheduler overhead
+#   kernel.sched_migration_cost_ns     — FX CPUs expose SMT-like topology but with
+#   kernel.sched_autogroup_enabled       shared FPUs; these help the scheduler pack
+#                                        work efficiently onto modules
+#   kernel.numa_balancing=0            — NUMA balancing adds overhead with no benefit
+#                                        on single-socket desktop systems
 tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
 vm.max_map_count=1048576
 fs.inotify.max_user_watches=524288
 fs.inotify.max_user_instances=512
 kernel.perf_event_paranoid=1
+kernel.nmi_watchdog=0
+kernel.sched_latency_ns=10000000
+kernel.sched_min_granularity_ns=3000000
+kernel.sched_wakeup_granularity_ns=4000000
 kernel.sched_migration_cost_ns=5000000
 kernel.sched_autogroup_enabled=1
 kernel.numa_balancing=0
