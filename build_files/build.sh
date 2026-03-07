@@ -279,11 +279,14 @@ EOF
 #                                   silently stop working
 #   kernel.perf_event_paranoid=1  — allows unprivileged perf access needed by
 #                                   MangoHud and other overlay/profiling tools
+#   kernel.numa_balancing=0       — NUMA balancing adds overhead with no benefit 
+#                                   on single-socket desktop systems like the FX #                                   platform.
 tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
 vm.max_map_count=1048576
 fs.inotify.max_user_watches=524288
 fs.inotify.max_user_instances=512
 kernel.perf_event_paranoid=1
+kernel.numa_balancing=0
 EOF
 
 # Retain core dumps for 3 days, then clean them up automatically
