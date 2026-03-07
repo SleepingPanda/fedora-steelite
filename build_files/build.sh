@@ -270,19 +270,6 @@ w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 409
 EOF
 
-# Grant the 'audio' group access to /dev/cpu_dma_latency so real-time audio
-# applications (e.g. JACK, PipeWire) can set low DMA latency without root
-tee /etc/udev/rules.d/60-cpu-dma-latency-permissions.rules <<'EOF'
-DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
-EOF
-
-# Force SCSI/SATA link power management to max_performance, preventing the
-# host controller from downclocking links to save power (avoids I/O latency
-# spikes on spinning drives and some SSDs)
-tee /etc/udev/rules.d/99-scsi-link-power-performance.rules <<'EOF'
-ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
-EOF
-
 # Tune systemd-oomd to act more aggressively than its conservative defaults.
 # Without this, oomd can let memory pressure build too long before killing
 # anything, effectively negating its purpose on a gaming system.
@@ -319,6 +306,23 @@ DefaultTimeoutStartSec=30s
 DefaultTimeoutStopSec=15s
 EOF
 
+# Grant the 'audio' group access to /dev/cpu_dma_latency so real-time audio
+# applications (e.g. JACK, PipeWire) can set low DMA latency without root
+tee /etc/udev/rules.d/60-cpu-dma-latency-permissions.rules <<'EOF'
+DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
+EOF
+
+tee /etc/udev/rules.d/60-ioschedulers.rules <<'EOF'
+# NVMe drives — bypass the kernel scheduler entirely
+ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="none"
+
+# Rotational HDDs — use BFQ for latency fairness
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"
+
+# SSDs (non-NVMe) — use mq-deadline
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
+EOF
+
 # Grant the 'input' group read/write access to gamepad and joystick nodes so
 # emulators and non-Steam games can read controllers without running as root.
 tee /etc/udev/rules.d/70-gamepad-permissions.rules <<'EOF'
@@ -334,6 +338,13 @@ EOF
 tee /etc/udev/rules.d/80-gpu-reset.rules <<'EOF'
 ACTION=="change", ENV{DEVNAME}=="/dev/dri/card0", ENV{RESET}=="1", ENV{PID}!="0", RUN+="/sbin/kill -9 %E{PID}"
 ACTION=="change", ENV{DEVNAME}=="/dev/dri/card0", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart sddm"
+EOF
+
+# Force SCSI/SATA link power management to max_performance, preventing the
+# host controller from downclocking links to save power (avoids I/O latency
+# spikes on spinning drives and some SSDs)
+tee /etc/udev/rules.d/99-scsi-link-power-performance.rules <<'EOF'
+ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
 EOF
 
 # =============================================================================
