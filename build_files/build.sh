@@ -181,9 +181,12 @@ systemctl enable ratbagd.service docker.service containerd.service lactd.service
 # System Configuration
 # =============================================================================
 
-# Create the 'docker' system group with a fixed GID (998) so bind-mounted
-# socket permissions are consistent across rebuilds
-tee /usr/lib/sysusers.d/docker.conf <<'EOF'
+# Create the 'input', 'gamemode', 'docker' and 'audio' system groups with a 
+# fixed GID so bind-mounted socket permissions are consistent across rebuilds
+tee /usr/lib/sysusers.d/steelite.conf <<'EOF'
+g audio 63
+g gamemode 984
+g input 104
 g docker 998
 EOF
 
