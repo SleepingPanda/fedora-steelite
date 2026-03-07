@@ -210,8 +210,42 @@ zram-fraction = 0.75
 max-zram-size = 12288
 EOF
 
+# Tune systemd-oomd to act more aggressively than its conservative defaults.
+# Without this, oomd can let memory pressure build too long before killing
+# anything, effectively negating its purpose on a gaming system.
+#   SwapUsedLimit=70%                  — intervene when swap is 70% full
+#   DefaultMemoryPressureLimit=50%     — trigger on sustained 50% PSI memory
+#                                        pressure (vs the default 60%, but
+#                                        combined with a shorter duration below
+#                                        this makes it much more responsive)
+#   DefaultMemoryPressureDurationSec=8s — act after 8s of sustained pressure
+#                                          rather than the default 30s
+mkdir -p /etc/systemd/oomd.conf.d
+tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
+[OOM]
+SwapUsedLimit=70%
+DefaultMemoryPressureLimit=50%
+DefaultMemoryPressureDurationSec=8s
+EOF
+
+# Reduce service start/stop timeouts from the 90s default. On a desktop/gaming
+# system a hung unit shouldn't hold up the session or shutdown for that long.
+mkdir -p /etc/systemd/system.conf.d
+tee /etc/systemd/system.conf.d/00-timeouts.conf <<'EOF'
+[Manager]
+DefaultTimeoutStartSec=30s
+DefaultTimeoutStopSec=15s
+EOF
+
+# FX CPUs expose SMT-like topology but with shared FPUs — these help
+# the scheduler pack work more efficiently onto modules
+tee /etc/sysctl.d/99-amd-fx.conf <<'EOF'
+kernel.sched_migration_cost_ns=5000000
+kernel.sched_autogroup_enabled=1
+EOF
+
 # Kernel tuning for ZRAM swap:
-#   vm.swappiness=180             — high swappiness is correct for ZRAM; unlike
+#   vm.swappiness=150             — high swappiness is correct for ZRAM; unlike
 #                                   slow disk swap, ZRAM is RAM-speed compressed
 #                                   memory so the kernel should use it freely.
 #                                   Kernels 5.8+ support values up to 200.
@@ -229,7 +263,7 @@ EOF
 #   kernel.perf_event_paranoid=1  — allows unprivileged perf access needed by
 #                                   MangoHud and other overlay/profiling tools
 tee /etc/sysctl.d/99-zram-swap.conf <<'EOF'
-vm.swappiness=180
+vm.swappiness=150
 vm.page-cluster=0
 vm.vfs_cache_pressure=50
 vm.dirty_ratio=10
@@ -267,24 +301,6 @@ w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 409
 EOF
 
-# Tune systemd-oomd to act more aggressively than its conservative defaults.
-# Without this, oomd can let memory pressure build too long before killing
-# anything, effectively negating its purpose on a gaming system.
-#   SwapUsedLimit=80%                  — intervene when swap is 80% full
-#   DefaultMemoryPressureLimit=60%     — trigger on sustained 60% PSI memory
-#                                        pressure (vs the default 60%, but
-#                                        combined with a shorter duration below
-#                                        this makes it much more responsive)
-#   DefaultMemoryPressureDurationSec=10s — act after 10s of sustained pressure
-#                                          rather than the default 30s
-mkdir -p /etc/systemd/oomd.conf.d
-tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
-[OOM]
-SwapUsedLimit=80%
-DefaultMemoryPressureLimit=60%
-DefaultMemoryPressureDurationSec=10s
-EOF
-
 # Allow the 'audio' group to run threads at realtime priority and lock
 # unlimited memory, which PipeWire and JACK require for glitch-free low-latency
 # audio. Without these, audio daemons fall back to non-RT scheduling.
@@ -292,15 +308,6 @@ mkdir -p /etc/security/limits.d
 tee /etc/security/limits.d/99-audio-realtime.conf <<'EOF'
 @audio   -  rtprio   95
 @audio   -  memlock  unlimited
-EOF
-
-# Reduce service start/stop timeouts from the 90s default. On a desktop/gaming
-# system a hung unit shouldn't hold up the session or shutdown for that long.
-mkdir -p /etc/systemd/system.conf.d
-tee /etc/systemd/system.conf.d/00-timeouts.conf <<'EOF'
-[Manager]
-DefaultTimeoutStartSec=30s
-DefaultTimeoutStopSec=15s
 EOF
 
 # Grant the 'audio' group access to /dev/cpu_dma_latency so real-time audio
