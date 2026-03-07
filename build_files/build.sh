@@ -319,14 +319,14 @@ tee /etc/udev/rules.d/60-cpu-dma-latency-permissions.rules <<'EOF'
 DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
 EOF
 
-tee /etc/udev/rules.d/60-ioschedulers.rules <<'EOF'
 # NVMe drives — bypass the kernel scheduler entirely
+# Rotational HDDs — use BFQ for latency fairness
+# SSDs (non-NVMe) — use mq-deadline
+tee /etc/udev/rules.d/60-ioschedulers.rules <<'EOF'
 ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="none"
 
-# Rotational HDDs — use BFQ for latency fairness
 ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"
 
-# SSDs (non-NVMe) — use mq-deadline
 ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
 EOF
 
