@@ -234,6 +234,22 @@ vm.dirty_ratio=10
 vm.dirty_background_ratio=5
 EOF
 
+# Gaming and development kernel tunables:
+#   vm.max_map_count=1048576      — many Proton/Wine games require a high memory
+#                                   map count; the default (65530) causes silent
+#                                   crashes or launch failures in some titles
+#   fs.inotify.max_user_watches   — VS Code and large dev projects exhaust the
+#   fs.inotify.max_user_instances   default limits, causing file watchers to
+#                                   silently stop working
+#   kernel.perf_event_paranoid=1  — allows unprivileged perf access needed by
+#                                   MangoHud and other overlay/profiling tools
+tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
+vm.max_map_count=1048576
+fs.inotify.max_user_watches=524288
+fs.inotify.max_user_instances=512
+kernel.perf_event_paranoid=1
+EOF
+
 # Retain core dumps for 3 days, then clean them up automatically
 tee /etc/tmpfiles.d/coredump.conf <<'EOF'
 d /var/lib/systemd/coredump 0755 root root 3d
