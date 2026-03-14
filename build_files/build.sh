@@ -137,8 +137,11 @@ dnf5 -y install \
     gamescope \
     glycin-thumbnailer \
     gstreamer1-plugin-openh264 \
+    gstreamer1-plugins-bad-free \
+    gstreamer1-plugins-bad-free-extras \
     gstreamer1-plugins-bad-freeworld \
     gstreamer1-plugins-ugly \
+    gstreamer1-plugins-ugly-free \
     gstreamer1-vaapi \
     ksshaskpass \
     lact \
