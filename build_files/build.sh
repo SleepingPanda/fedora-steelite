@@ -65,7 +65,7 @@ gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
 
-# LACT (Linux AMDGPU Control Application) — AMD GPU overclocking and monitoring
+# LACT (Linux GPU Control Application) — GPU overclocking and monitoring
 rpm --import https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
 tee /etc/yum.repos.d/lact.repo <<'EOF'
 [lact]
