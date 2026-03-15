@@ -449,3 +449,9 @@ systemctl enable \
 # Remove cached package metadata and downloaded RPMs to keep the image lean
 # =============================================================================
 dnf5 -y clean all
+rm -f /var/lib/systemd/random-seed
+rm -rf \
+    /var/lib/dnf \
+    /var/lib/containers \
+    /var/log/* \
+    /tmp/*
