@@ -126,6 +126,7 @@ dnf5 -y install \
     --enablerepo=rpmfusion-free \
     --enablerepo=rpmfusion-nonfree-steam \
     --enablerepo=vscode \
+    adwaita-icon-theme \
     akmods \
     android-tools \
     code \
@@ -136,6 +137,7 @@ dnf5 -y install \
     docker-compose-plugin \
     gamescope \
     glycin-thumbnailer \
+    gnome-themes-extra \
     gstreamer1-plugin-openh264 \
     gstreamer1-plugins-bad-free \
     gstreamer1-plugins-bad-free-extras \
