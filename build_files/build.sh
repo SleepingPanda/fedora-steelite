@@ -256,6 +256,8 @@ EOF
 #   vm.max_map_count=1048576           — many Proton/Wine games require a high memory
 #                                        map count; the default (65530) causes silent
 #                                        crashes or launch failures in some titles
+#   vm.oom_kill_allocating_task=1      — immediately kill the process that just
+#                                        triggered the OOM
 #   fs.inotify.max_user_watches        — VS Code and large dev projects exhaust the
 #   fs.inotify.max_user_instances        default limits, causing file watchers to
 #                                        silently stop working
@@ -277,6 +279,7 @@ EOF
 #                                        on single-socket desktop systems
 tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
 vm.max_map_count=1048576
+vm.oom_kill_allocating_task=1
 fs.inotify.max_user_watches=524288
 fs.inotify.max_user_instances=512
 kernel.perf_event_paranoid=1
@@ -367,6 +370,64 @@ EOF
 # Retain core dumps for 3 days, then clean them up automatically
 tee /etc/tmpfiles.d/coredump.conf <<'EOF'
 d /var/lib/systemd/coredump 0755 root root 3d
+EOF
+
+
+# =============================================================================
+# systemd-oomd — Slice Opt-ins
+# oomd only monitors/kills cgroups that explicitly opt in via ManagedOOM*.
+# Without these, oomd.conf tuning has no effect on user sessions.
+# =============================================================================
+
+# Root slice: kill when swap is saturated
+mkdir -p /etc/systemd/system/-.slice.d
+tee /etc/systemd/system/-.slice.d/oomd.conf <<'EOF'
+[Slice]
+ManagedOOMSwap=kill
+EOF
+
+# User slice: kill the most memory-pressuring process in any user session
+mkdir -p /etc/systemd/system/user.slice.d
+tee /etc/systemd/system/user.slice.d/oomd.conf <<'EOF'
+[Slice]
+ManagedOOMMemoryPressure=kill
+ManagedOOMMemoryPressureLimit=50%
+EOF
+
+# Per-user manager service — covers apps launched inside the session
+mkdir -p /etc/systemd/system/user@.service.d
+tee /etc/systemd/system/user@.service.d/oomd.conf <<'EOF'
+[Service]
+ManagedOOMMemoryPressure=kill
+ManagedOOMMemoryPressureLimit=50%
+EOF
+
+
+# =============================================================================
+# KWin Protection
+# Ensure the compositor is never killed by the OOM system and gets priority
+# CPU access so input events are processed even under heavy load.
+# =============================================================================
+mkdir -p /etc/systemd/user/plasma-kwin_wayland.service.d
+tee /etc/systemd/user/plasma-kwin_wayland.service.d/protect.conf <<'EOF'
+[Service]
+# Never let the kernel OOM killer pick KWin — score of -900 means
+# it will kill literally everything else first
+OOMScoreAdjust=-900
+
+# Higher CPU weight so the scheduler prefers KWin when cores are contested
+# (default is 100; 800 means KWin gets ~8x more CPU than a background process)
+CPUWeight=800
+Nice=-10
+EOF
+
+# Same protection for plasmashell (taskbar, system tray, notifications)
+mkdir -p /etc/systemd/user/plasma-plasmashell.service.d
+tee /etc/systemd/user/plasma-plasmashell.service.d/protect.conf <<'EOF'
+[Service]
+OOMScoreAdjust=-700
+CPUWeight=400
+Nice=-5
 EOF
 
 
