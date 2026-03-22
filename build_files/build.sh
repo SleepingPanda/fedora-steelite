@@ -21,7 +21,8 @@ WINBOAT_VERSION="0.9.0"
 TABBY_VERSION="1.0.230"
 # https://github.com/kem-a/appimage-thumbnailer/releases
 APPIMAGE_THUMBNAILER_VERSION="4.0.0"
-
+# https://github.com/bitwarden/clients/releases
+BITWARDEN_CLIENTS_VERSION="2026.2.1"
 
 # =============================================================================
 # Repo Configuration
@@ -164,7 +165,7 @@ dnf5 -y install \
 dnf5 install -y "https://github.com/TibixDev/winboat/releases/download/v${WINBOAT_VERSION}/winboat-${WINBOAT_VERSION}-x86_64.rpm"
 
 # Bitwarden — password manager desktop client
-dnf5 install -y "https://bitwarden.com/download/?app=desktop&platform=linux&variant=rpm"
+dnf5 install -y "https://github.com/bitwarden/clients/releases/download/desktop-v${BITWARDEN_VERSION}/Bitwarden-${BITWARDEN_VERSION}-x86_64.rpm"
 
 # Tabby — modern GPU-accelerated terminal emulator
 dnf5 install -y "https://github.com/Eugeny/tabby/releases/download/v${TABBY_VERSION}/tabby-${TABBY_VERSION}-linux-x64.rpm"
