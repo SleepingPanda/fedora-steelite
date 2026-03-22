@@ -344,16 +344,16 @@ EOF
 # Tune systemd-oomd to act more aggressively than its conservative defaults.
 # Without this, oomd can let memory pressure build too long before killing
 # anything, effectively negating its purpose on a gaming system.
-#   SwapUsedLimit=70%                — intervene when swap is 70% full
-#   DefaultMemoryPressureLimit=50%   — trigger on sustained 50% PSI memory
+#   SwapUsedLimit=85%                — intervene when swap is 85% full
+#   DefaultMemoryPressureLimit=80%   — trigger on sustained 80% PSI memory
 #                                      pressure (vs. the default 60%)
-#   DefaultMemoryPressureDurationSec — act after 8s rather than the default 30s
+#   DefaultMemoryPressureDurationSec — act after 20s rather than the default 30s
 mkdir -p /etc/systemd/oomd.conf.d
 tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
 [OOM]
-SwapUsedLimit=70%
-DefaultMemoryPressureLimit=50%
-DefaultMemoryPressureDurationSec=8s
+SwapUsedLimit=85%
+DefaultMemoryPressureLimit=80%
+DefaultMemoryPressureDurationSec=20s
 EOF
 
 # Reduce service start/stop timeouts from the 90s default. On a desktop/gaming
@@ -395,16 +395,14 @@ EOF
 mkdir -p /etc/systemd/system/user.slice.d
 tee /etc/systemd/system/user.slice.d/oomd.conf <<'EOF'
 [Slice]
-ManagedOOMMemoryPressure=kill
-ManagedOOMMemoryPressureLimit=50%
+ManagedOOMSwap=kill
 EOF
 
 # Per-user manager service — covers apps launched inside the session
 mkdir -p /etc/systemd/system/user@.service.d
 tee /etc/systemd/system/user@.service.d/oomd.conf <<'EOF'
 [Service]
-ManagedOOMMemoryPressure=kill
-ManagedOOMMemoryPressureLimit=50%
+ManagedOOMSwap=kill
 EOF
 
 
