@@ -486,13 +486,15 @@ SUBSYSTEM=="input", KERNEL=="js[0-9]*", GROUP="input", MODE="0660"
 SUBSYSTEM=="input", KERNEL=="event[0-9]*", ATTRS{name}=="*Controller*", GROUP="input", MODE="0660"
 EOF
 
-# GPU reset recovery for /dev/dri/card0:
+# GPU reset recovery for drm drivers — when the GPU hangs and resets, the
+# kernel exposes a RESET event with the PID of the offending process. These
+# rules:
 #   - On a GPU reset event, kill the owning PID to release the hung context
 #   - If the display server (SDDM) is involved, restart it to recover the
 #     desktop session cleanly
 tee /etc/udev/rules.d/80-gpu-reset.rules <<'EOF'
-ACTION=="change", ENV{DEVNAME}=="/dev/dri/card0", ENV{RESET}=="1", ENV{PID}!="0", RUN+="/sbin/kill -9 %E{PID}"
-ACTION=="change", ENV{DEVNAME}=="/dev/dri/card0", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart sddm"
+ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{PID}!="0", RUN+="/sbin/kill -9 %E{PID}"
+ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart sddm"
 EOF
 
 
