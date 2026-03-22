@@ -195,9 +195,6 @@ dnf5 -y remove '*-firmware' thermald firefox \
 # consistent across rebuilds.
 # =============================================================================
 tee /usr/lib/sysusers.d/steelite.conf <<'EOF'
-g audio    63
-g input   104
-g gamemode 984
 g docker  998
 EOF
 
@@ -513,6 +510,12 @@ systemctl enable \
     podman-auto-update.timer \
     ratbagd.service \
     systemd-oomd.service
+
+
+tee /etc/environment.d/50-ssh-askpass.conf <<'EOF'
+SSH_ASKPASS=/usr/bin/ksshaskpass
+SSH_ASKPASS_REQUIRE=prefer
+EOF
 
 
 # =============================================================================
