@@ -495,7 +495,7 @@ EOF
 #   - If the display server (SDDM) is involved, restart it to recover the
 #     desktop session cleanly
 tee /etc/udev/rules.d/80-gpu-reset.rules <<'EOF'
-ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{PID}!="0", RUN+="/sbin/kill -9 %E{PID}"
+ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{PID}!="0", RUN+="/usr/bin/kill -9 %E{PID}"
 ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart sddm"
 EOF
 
