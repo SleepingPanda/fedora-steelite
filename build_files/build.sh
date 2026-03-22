@@ -412,9 +412,9 @@ EOF
 mkdir -p /etc/systemd/user/plasma-kwin_wayland.service.d
 tee /etc/systemd/user/plasma-kwin_wayland.service.d/protect.conf <<'EOF'
 [Service]
-# Never let the kernel OOM killer pick KWin — score of -900 means
+# Never let the kernel OOM killer pick KWin — score of -100 means
 # it will kill literally everything else first
-OOMScoreAdjust=-900
+OOMScoreAdjust=-100
 
 # Higher CPU weight so the scheduler prefers KWin when cores are contested
 # (default is 100; 800 means KWin gets ~8x more CPU than a background process)
@@ -426,7 +426,7 @@ EOF
 mkdir -p /etc/systemd/user/plasma-plasmashell.service.d
 tee /etc/systemd/user/plasma-plasmashell.service.d/protect.conf <<'EOF'
 [Service]
-OOMScoreAdjust=-700
+OOMScoreAdjust=-100
 CPUWeight=400
 Nice=-5
 EOF
