@@ -22,7 +22,7 @@ TABBY_VERSION="1.0.230"
 # https://github.com/kem-a/appimage-thumbnailer/releases
 APPIMAGE_THUMBNAILER_VERSION="4.0.0"
 # https://github.com/bitwarden/clients/releases
-BITWARDEN_CLIENTS_VERSION="2026.2.1"
+BITWARDEN_VERSION="2026.2.1"
 
 # =============================================================================
 # Repo Configuration
