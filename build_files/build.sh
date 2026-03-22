@@ -285,12 +285,17 @@ fs.inotify.max_user_watches=524288
 fs.inotify.max_user_instances=512
 kernel.perf_event_paranoid=1
 kernel.nmi_watchdog=0
+kernel.sched_autogroup_enabled=1
+kernel.numa_balancing=0
+EOF
+
+tee /etc/sysctl.d/99-amd-fx-scheduler.conf <<'EOF'
+# These values are tuned for AMD FX (Bulldozer/Piledriver) module topology.
+# On modern CPUs (Zen, Intel), remove this file. Defaults are better.
 kernel.sched_latency_ns=10000000
 kernel.sched_min_granularity_ns=3000000
 kernel.sched_wakeup_granularity_ns=4000000
 kernel.sched_migration_cost_ns=5000000
-kernel.sched_autogroup_enabled=1
-kernel.numa_balancing=0
 EOF
 
 
