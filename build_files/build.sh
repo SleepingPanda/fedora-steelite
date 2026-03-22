@@ -513,6 +513,7 @@ systemctl enable \
     systemd-oomd.service
 
 
+mkdir -p /etc/environment.d
 tee /etc/environment.d/50-ssh-askpass.conf <<'EOF'
 SSH_ASKPASS=/usr/bin/ksshaskpass
 SSH_ASKPASS_REQUIRE=prefer
