@@ -507,7 +507,6 @@ systemctl enable \
     containerd.service \
     docker.service \
     lactd.service \
-    podman-auto-update.timer \
     ratbagd.service \
     systemd-oomd.service
 
