@@ -242,8 +242,8 @@ EOF
 #                                      kswapd wakes less often but reclaims more
 #                                      when it does, reducing reclaim churn
 tee /etc/sysctl.d/99-memory.conf <<'EOF'
-vm.swappiness=150
-vm.page-cluster=0
+vm.swappiness=10
+vm.page-cluster=3
 vm.vfs_cache_pressure=50
 vm.dirty_ratio=10
 vm.dirty_background_ratio=5
@@ -299,34 +299,43 @@ EOF
 
 
 # =============================================================================
-# Memory — ZRAM & Transparent Huge Pages
+# Memory — Swap, Zswap & Transparent Huge Pages
 # =============================================================================
 
-# ZRAM swap — use 50% of RAM up to 16 GB as a compressed swap device, which
-# reduces I/O on SSDs and improves responsiveness under memory pressure
-mkdir -p /etc/systemd/zram-generator.conf.d
-tee /etc/systemd/zram-generator.conf.d/00-override.conf <<'EOF'
-[zram0]
-zram-fraction = 0.5
-max-zram-size = 16384
-compression-algorithm = zstd
+# Disable zram — using zswap with a dedicated SSD swap partition instead
+mkdir -p /etc/systemd
+tee /etc/systemd/zram-generator.conf > /dev/null <<'EOF'
+# Intentionally empty — zram disabled in favor of zswap+swapfile
 EOF
 
-# Transparent Huge Pages:
-#   enabled=madvise             — only collapse huge pages for processes that
-#                                 explicitly request them; reduces fragmentation
-#                                 and compaction overhead for everything else
-#   shmem_enabled=advise        — apply the same policy to shared memory
-#                                 (tmpfs, memfd); benefits Proton/Wine shader
-#                                 caches and shared allocations
-#   defrag=defer+madvise        — only defrag on madvise() calls or async;
-#                                 avoids stalls in latency-sensitive workloads
-#                                 (games, audio)
-#   max_ptes_none=409           — allow khugepaged to collapse more zero-page
-#                                 PTEs, improving memory efficiency for large
-#                                 allocations
-#   scan_sleep_millisecs=1000   — slow khugepaged's scan interval to reduce
-#   alloc_sleep_millisecs=60000   background CPU overhead during gaming sessions
+# Reference swap partition by label — device-name agnostic.
+# Partition must be created and labelled 'steelite-swap' before first boot.
+# nofail prevents boot hang if drive is absent (e.g. different machine).
+grep -qxF 'LABEL=steelite-swap  none  swap  defaults,nofail  0  0' /etc/fstab \
+    || echo 'LABEL=steelite-swap  none  swap  defaults,nofail  0  0' >> /etc/fstab
+
+# zswap kernel args — applied by bootc on fresh installs.
+# Existing deployments: run `rpm-ostree kargs --append=...` once manually.
+mkdir -p /usr/lib/bootloader.d
+tee /usr/lib/bootloader.d/zswap.conf <<'EOF'
+zswap.enabled=1 zswap.compressor=lz4 zswap.zpool=z3fold zswap.max_pool_percent=15
+EOF
+
+# Memory tunables — tuned for zswap + disk-backed swap:
+#   vm.swappiness=10       — disk is slow; avoid it, let zswap handle pressure
+#   vm.page-cluster=3      — restore default read-ahead (disk benefits, unlike zram)
+tee /etc/sysctl.d/99-memory.conf <<'EOF'
+vm.swappiness=10
+vm.page-cluster=3
+vm.vfs_cache_pressure=50
+vm.dirty_ratio=10
+vm.dirty_background_ratio=5
+vm.compaction_proactiveness=0
+vm.watermark_boost_factor=0
+vm.watermark_scale_factor=125
+EOF
+
+# Transparent Huge Pages
 tee /etc/tmpfiles.d/thp.conf <<'EOF'
 w! /sys/kernel/mm/transparent_hugepage/enabled - - - - madvise
 w! /sys/kernel/mm/transparent_hugepage/shmem_enabled - - - - advise
