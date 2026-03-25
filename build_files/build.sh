@@ -456,6 +456,12 @@ tee /etc/udev/rules.d/60-cpu-dma-latency.rules <<'EOF'
 DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
 EOF
 
+# Grant the 'audio' group access to HPET timers so real-time audio applications
+# can use them for high-resolution scheduling without root
+tee /etc/udev/rules.d/40-hpet-permissions.rules <<'EOF'
+KERNEL=="hpet", GROUP="audio"
+KERNEL=="rtc0", GROUP="audio"
+EOF
 
 # =============================================================================
 # Storage — I/O Schedulers & Link Power
