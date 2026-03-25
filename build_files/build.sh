@@ -334,7 +334,7 @@ tee /etc/tmpfiles.d/thp.conf <<'EOF'
 w! /sys/kernel/mm/transparent_hugepage/enabled - - - - madvise
 w! /sys/kernel/mm/transparent_hugepage/shmem_enabled - - - - advise
 w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 409
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 4091
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs - - - - 1000
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/alloc_sleep_millisecs - - - - 60000
 EOF
