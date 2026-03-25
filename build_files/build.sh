@@ -308,12 +308,6 @@ tee /etc/systemd/zram-generator.conf > /dev/null <<'EOF'
 # Intentionally empty — zram disabled in favor of zswap+swapfile
 EOF
 
-# Reference swap partition by label — device-name agnostic.
-# Partition must be created and labelled 'steelite-swap' before first boot.
-# nofail prevents boot hang if drive is absent (e.g. different machine).
-grep -qxF 'LABEL=steelite-swap  none  swap  defaults,nofail  0  0' /etc/fstab \
-    || echo 'LABEL=steelite-swap  none  swap  defaults,nofail  0  0' >> /etc/fstab
-
 # zswap kernel args — applied by bootc on fresh installs.
 # Existing deployments: run `rpm-ostree kargs --append=...` once manually.
 mkdir -p /usr/lib/bootloader.d
