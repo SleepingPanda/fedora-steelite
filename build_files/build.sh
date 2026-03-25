@@ -318,7 +318,7 @@ grep -qxF 'LABEL=steelite-swap  none  swap  defaults,nofail  0  0' /etc/fstab \
 # Existing deployments: run `rpm-ostree kargs --append=...` once manually.
 mkdir -p /usr/lib/bootloader.d
 tee /usr/lib/bootloader.d/zswap.conf <<'EOF'
-zswap.enabled=1 zswap.compressor=lz4 zswap.zpool=z3fold zswap.max_pool_percent=15
+zswap.enabled=1 zswap.compressor=lz4 zswap.zpool=zsmalloc zswap.max_pool_percent=15
 EOF
 
 # Memory tunables — tuned for zswap + disk-backed swap:
