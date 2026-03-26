@@ -249,7 +249,7 @@ vm.dirty_ratio=10
 vm.dirty_background_ratio=5
 vm.compaction_proactiveness=0
 vm.watermark_boost_factor=0
-vm.watermark_scale_factor=125
+vm.watermark_scale_factor=75
 EOF
 
 # Gaming and development tunables:
@@ -282,10 +282,12 @@ vm.max_map_count=1048576
 vm.oom_kill_allocating_task=1
 fs.inotify.max_user_watches=524288
 fs.inotify.max_user_instances=512
+fs.file-max=2097152
 kernel.perf_event_paranoid=1
 kernel.nmi_watchdog=0
 kernel.sched_autogroup_enabled=1
 kernel.numa_balancing=0
+kernel.split_lock_mitigate=0
 EOF
 
 tee /etc/sysctl.d/99-amd-fx-scheduler.conf <<'EOF'
@@ -294,7 +296,7 @@ tee /etc/sysctl.d/99-amd-fx-scheduler.conf <<'EOF'
 kernel.sched_latency_ns=10000000
 kernel.sched_min_granularity_ns=3000000
 kernel.sched_wakeup_granularity_ns=4000000
-kernel.sched_migration_cost_ns=5000000
+kernel.sched_migration_cost_ns=1000000
 EOF
 
 
