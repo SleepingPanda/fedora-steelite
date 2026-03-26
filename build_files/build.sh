@@ -303,6 +303,7 @@ EOF
 # =============================================================================
 # Memory — Swap, Zswap & Transparent Huge Pages
 # =============================================================================
+# Using https://bytes.are.sexy/l/zswap_tuning as a reference for these tunables.
 
 # Disable zram — using zswap with a dedicated SSD swap partition instead
 mkdir -p /etc/systemd
@@ -332,6 +333,7 @@ vm.watermark_scale_factor=125
 EOF
 
 # Transparent Huge Pages
+# Using hhttps://bytes.are.sexy/l/thp_tuning as a reference for these tunables.
 # THP: all processes eligible, but no synchronous compaction (gaming-safe)
 # khugepaged: large infrequent scans instead of small frequent ones
 tee /etc/tmpfiles.d/thp.conf <<'EOF'
@@ -349,6 +351,8 @@ EOF
 # =============================================================================
 # systemd — OOM, Timeouts & Journal
 # =============================================================================
+# Using https://bytes.are.sexy/l/systemd_oomd_tuning as a reference for these
+# tunables.
 
 # Tune systemd-oomd to act more aggressively than its conservative defaults.
 # Without this, oomd can let memory pressure build too long before killing
@@ -384,61 +388,6 @@ EOF
 # Retain core dumps for 3 days, then clean them up automatically
 tee /etc/tmpfiles.d/coredump.conf <<'EOF'
 d /var/lib/systemd/coredump 0755 root root 3d
-EOF
-
-
-# =============================================================================
-# systemd-oomd — Slice Opt-ins
-# oomd only monitors/kills cgroups that explicitly opt in via ManagedOOM*.
-# Without these, oomd.conf tuning has no effect on user sessions.
-# =============================================================================
-
-# Root slice: kill when swap is saturated
-mkdir -p /etc/systemd/system/-.slice.d
-tee /etc/systemd/system/-.slice.d/oomd.conf <<'EOF'
-[Slice]
-ManagedOOMSwap=kill
-EOF
-
-# User slice: kill the most memory-pressuring process in any user session
-mkdir -p /etc/systemd/system/user.slice.d
-tee /etc/systemd/system/user.slice.d/oomd.conf <<'EOF'
-[Slice]
-ManagedOOMSwap=kill
-EOF
-
-# Per-user manager service — covers apps launched inside the session
-mkdir -p /etc/systemd/system/user@.service.d
-tee /etc/systemd/system/user@.service.d/oomd.conf <<'EOF'
-[Service]
-ManagedOOMSwap=kill
-EOF
-
-
-# =============================================================================
-# KWin Protection
-# Ensure the compositor is never killed by the OOM system and gets priority
-# CPU access so input events are processed even under heavy load.
-# =============================================================================
-
-# Never let the kernel OOM killer pick KWin — score of -100 means
-# it will kill literally everything else first
-# Higher CPU weight so the scheduler prefers KWin when cores are contested
-# (default is 100; 800 means KWin gets ~8x more CPU than a background process)
-mkdir -p /etc/systemd/user/plasma-kwin_wayland.service.d
-tee /etc/systemd/user/plasma-kwin_wayland.service.d/protect.conf <<'EOF'
-[Service]
-OOMScoreAdjust=-100
-CPUWeight=800
-EOF
-
-# Same protection for plasmashell (taskbar, system tray, notifications)
-mkdir -p /etc/systemd/user/plasma-plasmashell.service.d
-tee /etc/systemd/user/plasma-plasmashell.service.d/protect.conf <<'EOF'
-[Service]
-OOMScoreAdjust=-100
-CPUWeight=400
-Nice=-5
 EOF
 
 
