@@ -330,13 +330,17 @@ vm.watermark_scale_factor=125
 EOF
 
 # Transparent Huge Pages
+# THP: all processes eligible, but no synchronous compaction (gaming-safe)
+# khugepaged: large infrequent scans instead of small frequent ones
 tee /etc/tmpfiles.d/thp.conf <<'EOF'
-w! /sys/kernel/mm/transparent_hugepage/enabled - - - - madvise
+w! /sys/kernel/mm/transparent_hugepage/enabled - - - - always
 w! /sys/kernel/mm/transparent_hugepage/shmem_enabled - - - - advise
 w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 4091
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs - - - - 1000
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/alloc_sleep_millisecs - - - - 60000
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/pages_to_scan - - - - 2097152
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs - - - - 79000
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 64
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_shared - - - - 64
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_swap - - - - 0
 EOF
 
 
