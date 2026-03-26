@@ -418,17 +418,16 @@ EOF
 # Ensure the compositor is never killed by the OOM system and gets priority
 # CPU access so input events are processed even under heavy load.
 # =============================================================================
+
+# Never let the kernel OOM killer pick KWin — score of -100 means
+# it will kill literally everything else first
+# Higher CPU weight so the scheduler prefers KWin when cores are contested
+# (default is 100; 800 means KWin gets ~8x more CPU than a background process)
 mkdir -p /etc/systemd/user/plasma-kwin_wayland.service.d
 tee /etc/systemd/user/plasma-kwin_wayland.service.d/protect.conf <<'EOF'
 [Service]
-# Never let the kernel OOM killer pick KWin — score of -100 means
-# it will kill literally everything else first
 OOMScoreAdjust=-100
-
-# Higher CPU weight so the scheduler prefers KWin when cores are contested
-# (default is 100; 800 means KWin gets ~8x more CPU than a background process)
 CPUWeight=800
-Nice=-10
 EOF
 
 # Same protection for plasmashell (taskbar, system tray, notifications)
