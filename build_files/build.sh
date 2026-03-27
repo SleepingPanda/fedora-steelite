@@ -222,13 +222,16 @@ EOF
 # Kernel Tunables (sysctl)
 # =============================================================================
 
-# Memory management — tuned for ZRAM swap:
-#   vm.swappiness=150                — high swappiness is correct for ZRAM; unlike
-#                                      slow disk swap, ZRAM is RAM-speed compressed
-#                                      memory so the kernel should use it freely.
-#                                      Kernels 5.8+ support values up to 200.
-#   vm.page-cluster=0                — disable swap read-ahead; ZRAM has no seek
-#                                      penalty so prefetching clusters is pure waste
+# Memory management — tuned for zswap + disk-backed swap:
+#   vm.swappiness=10                 — disk is slow; don't use it until necessary.
+#                                      (contrast: zram-only setups benefit from
+#                                      swappiness=150 because RAM is fast, but
+#                                      that would hammer the SSD here)
+#   vm.page-cluster=3                — default read-ahead; sequential reads are
+#                                      cheap on NVMe/SSD so pre-faulting 2^3 = 8
+#                                      pages amortises I/O cost. Setting this to
+#                                      0 (a zram optimisation) actively hurts on
+#                                      real disk because pages have locality there
 #   vm.vfs_cache_pressure=50         — balanced inode/dentry cache reclaim
 #   vm.dirty_ratio=10                — flush dirty pages when 10% of RAM is dirty
 #   vm.dirty_background_ratio=5      — start background writeback at 5%
@@ -249,7 +252,7 @@ vm.dirty_ratio=10
 vm.dirty_background_ratio=5
 vm.compaction_proactiveness=0
 vm.watermark_boost_factor=0
-vm.watermark_scale_factor=75
+vm.watermark_scale_factor=125
 EOF
 
 # Gaming and development tunables:
@@ -267,16 +270,13 @@ EOF
 #                                        periodic NMI interrupts for hang detection;
 #                                        unnecessary on a desktop and frees a perf
 #                                        counter on each core
-#   kernel.sched_latency_ns            — target scheduling latency for the CFS
-#   kernel.sched_min_granularity_ns      runqueue; reducing these values lowers
-#   kernel.sched_wakeup_granularity_ns   worst-case response time for interactive
-#                                        and gaming workloads at the cost of slightly
-#                                        higher scheduler overhead
-#   kernel.sched_migration_cost_ns     — FX CPUs expose SMT-like topology but with
-#   kernel.sched_autogroup_enabled       shared FPUs; these help the scheduler pack
-#                                        work efficiently onto modules
+#   kernel.sched_autogroup_enabled=1   — group tasks by session so interactive apps
+#                                        and games don't compete with build jobs
 #   kernel.numa_balancing=0            — NUMA balancing adds overhead with no benefit
 #                                        on single-socket desktop systems
+#   kernel.split_lock_mitigate=0       — suppress split-lock slowdowns; some older
+#                                        Windows game binaries under Proton trigger
+#                                        these and suffer severe performance penalties
 tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
 vm.max_map_count=1048576
 vm.oom_kill_allocating_task=1
@@ -301,50 +301,72 @@ EOF
 
 
 # =============================================================================
-# Memory — Swap, Zswap & Transparent Huge Pages
+# Memory — Zswap & Transparent Huge Pages
 # =============================================================================
-# Using https://bytes.are.sexy/l/zswap_tuning as a reference for these tunables.
 
-# Disable zram — using zswap with a dedicated SSD swap partition instead
+# Disable zram — using zswap with a dedicated swap partition on the SSD instead.
+# zswap is integrated directly into the kernel's reclaim path and tiers cold
+# pages to disk automatically. zram has no equivalent: once it fills up there
+# is no eviction, leading to LRU inversion (cold pages locked in fast RAM while
+# your active working set gets pushed to slow disk).
+# See: https://chrisdown.name/2026/03/24/zswap-vs-zram-when-to-use-what.html
 mkdir -p /etc/systemd
 tee /etc/systemd/zram-generator.conf > /dev/null <<'EOF'
-# Intentionally empty — zram disabled in favor of zswap+swapfile
 EOF
 
-# zswap kernel args — applied by bootc on fresh installs.
+# zswap kernel arguments — applied by bootc on fresh installs.
 # Existing deployments: run `rpm-ostree kargs --append=...` once manually.
+#
+#   zswap.enabled=1                — enable the zswap compressed cache
+#   zswap.compressor=lz4           — fast, low-latency compression; suitable for
+#                                    interactive and gaming workloads where
+#                                    decompression latency matters more than ratio
+#   zswap.zpool=zsmalloc           — best allocator; groups similar objects for
+#                                    high compression ratios. z3fold/zbud are
+#                                    removed from upstream kernels
+#   zswap.max_pool_percent=20      — allow zswap to use up to 20% of RAM as its
+#                                    compressed pool before tiering to disk;
+#                                    the dynamic shrinker normally keeps usage
+#                                    well below this ceiling
 mkdir -p /usr/lib/bootloader.d
 tee /usr/lib/bootloader.d/zswap.conf <<'EOF'
-zswap.enabled=1 zswap.compressor=lz4 zswap.zpool=zsmalloc zswap.max_pool_percent=15
-EOF
-
-# Memory tunables — tuned for zswap + disk-backed swap:
-#   vm.swappiness=10       — disk is slow; avoid it, let zswap handle pressure
-#   vm.page-cluster=3      — restore default read-ahead (disk benefits, unlike zram)
-tee /etc/sysctl.d/99-memory.conf <<'EOF'
-vm.swappiness=10
-vm.page-cluster=3
-vm.vfs_cache_pressure=50
-vm.dirty_ratio=10
-vm.dirty_background_ratio=5
-vm.compaction_proactiveness=0
-vm.watermark_boost_factor=0
-vm.watermark_scale_factor=125
+zswap.enabled=1 zswap.compressor=lz4 zswap.zpool=zsmalloc zswap.max_pool_percent=20 zswap.shrinker_enabled=1
 EOF
 
 # Transparent Huge Pages
-# Using hhttps://bytes.are.sexy/l/thp_tuning as a reference for these tunables.
-# THP: all processes eligible, but no synchronous compaction (gaming-safe)
-# khugepaged: large infrequent scans instead of small frequent ones
+#
+# enabled=always       — all processes are eligible; reduces dTLB misses for
+#                        any workload with large anonymous memory regions
+# shmem_enabled=advise — only promote shared memory when explicitly requested,
+#                        avoiding overhead on small IPC buffers
+# defrag=defer+madvise — do NOT use defrag=always here. Synchronous compaction
+#                        (defrag=always) gives large throughput gains for batch
+#                        compute workloads (see: github.com/max0x7ba/thp-usage)
+#                        but causes frame-time spikes in games by stalling
+#                        page faults mid-frame. defer+madvise defers compaction
+#                        to khugepaged and only promotes on explicit madvise()
+#                        calls, which is the right tradeoff for interactive use
+#
+# khugepaged tuning (from thp-usage benchmarks):
+#   pages_to_scan=2097152          — scan up to 8GB of VMAs per pass; allows
+#                                    khugepaged to catch up quickly after a
+#                                    large allocation without running constantly
+#   scan_sleep_millisecs=79000     — scan every 79s; infrequent enough to avoid
+#                                    competing with foreground work
+#   max_ptes_none/shared=64        — allow collapsing regions with up to 64
+#                                    unmapped or shared PTEs; increases THP
+#                                    coverage on real workloads
+#   max_ptes_swap=0                — do not collapse regions with pages currently
+#                                    on swap; avoids unnecessary disk I/O
 tee /etc/tmpfiles.d/thp.conf <<'EOF'
-w! /sys/kernel/mm/transparent_hugepage/enabled - - - - always
-w! /sys/kernel/mm/transparent_hugepage/shmem_enabled - - - - advise
-w! /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/pages_to_scan - - - - 2097152
+w! /sys/kernel/mm/transparent_hugepage/enabled                    - - - - always
+w! /sys/kernel/mm/transparent_hugepage/shmem_enabled              - - - - advise
+w! /sys/kernel/mm/transparent_hugepage/defrag                     - - - - defer+madvise
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/pages_to_scan   - - - - 2097152
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs - - - - 79000
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none - - - - 64
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none   - - - - 64
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_shared - - - - 64
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_swap - - - - 0
+w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_swap   - - - - 0
 EOF
 
 
