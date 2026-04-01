@@ -367,20 +367,25 @@ EOF
 # =============================================================================
 # systemd — OOM, Timeouts & Journal
 # =============================================================================
-# See: https://oneuptime.com/blog/post/2026-03-02-how-to-configure-systemd-oomd-for-out-of-memory-handling-on-ubuntu
+# See: https://raw.githubusercontent.com/OneUptime/blog/refs/heads/master/posts/2026-03-04-systemd-oomd-out-of-memory-management-rhel-9/README.md
 
-# Tune systemd-oomd to act more aggressively than its conservative defaults.
-# Without this, oomd can let memory pressure build too long before killing
-# anything, effectively negating its purpose on a gaming system.
-#   SwapUsedLimit=85%                — intervene when swap is 85% full
-#   DefaultMemoryPressureLimit=80%   — trigger on sustained 80% PSI memory
-#                                      pressure (vs. the default 60%)
-#   DefaultMemoryPressureDurationSec — act after 20s rather than the default 30s
+# Tune systemd-oomd for slightly earlier intervention than upstream defaults.
+#   SwapUsedLimit=85%                    — kill when SSD swap is 85% full; with
+#                                          zswap tiering to disk, reaching this
+#                                          point means the compressed pool is
+#                                          exhausted and disk I/O is the only
+#                                          remaining fallback
+#   DefaultMemoryPressureLimit=60%       — upstream default; kill when 60% of
+#                                          wall time is spent stalled on memory.
+#                                          Raising this delays oomd — it does not
+#                                          make it more aggressive
+#   DefaultMemoryPressureDurationSec=20s — act after 20s of sustained pressure
+#                                          rather than the upstream default of 30s
 mkdir -p /etc/systemd/oomd.conf.d
 tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
 [OOM]
 SwapUsedLimit=85%
-DefaultMemoryPressureLimit=80%
+DefaultMemoryPressureLimit=60%
 DefaultMemoryPressureDurationSec=20s
 EOF
 
