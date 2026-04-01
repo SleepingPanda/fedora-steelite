@@ -427,13 +427,21 @@ EOF
 # =============================================================================
 
 # Per-device I/O scheduler policy:
-#   NVMe  — bypass the kernel scheduler entirely (device has its own queuing)
-#   HDDs  — use BFQ for latency fairness across competing processes
-#   SSDs  — use mq-deadline for low-latency sequential I/O
+#   NVMe  — bypass the kernel scheduler entirely (device has its own queuing).
+#           rq_affinity=2 forces completion on the originating CPU core,
+#           avoiding cache-line bouncing across cores.
+#           read_ahead_kb=128 suits the mixed random/sequential pattern of
+#           game launches and build toolchains.
+#   HDDs  — BFQ for latency fairness across competing processes; high
+#           read_ahead_kb amortises seek cost on large sequential reads
+#           (game asset packs, build artefacts).
+#   SSDs  — mq-deadline for low-latency sequential I/O; modest read-ahead.
+#   eMMC  — same treatment as SSD.
 tee /etc/udev/rules.d/60-ioschedulers.rules <<'EOF'
-ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="none"
-ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"
-ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
+ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ATTR{queue/scheduler}="none", ATTR{queue/rq_affinity}="2", ATTR{queue/read_ahead_kb}="128"
+ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq", ATTR{queue/read_ahead_kb}="2048"
+ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
+ACTION=="add|change", KERNEL=="mmcblk[0-9]*", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
 EOF
 
 # Force SCSI/SATA link power management to max_performance, preventing the
