@@ -415,27 +415,12 @@ EOF
 # Audio — Realtime Scheduling
 # =============================================================================
 
-# Allow the 'audio' group to run threads at realtime priority and lock
-# unlimited memory, which PipeWire and JACK require for glitch-free low-latency
-# audio. Without these, audio daemons fall back to non-RT scheduling.
-mkdir -p /etc/security/limits.d
-tee /etc/security/limits.d/99-audio-realtime.conf <<'EOF'
-@audio   -  rtprio   95
-@audio   -  memlock  unlimited
-EOF
-
 # Grant the 'audio' group access to /dev/cpu_dma_latency so real-time audio
 # applications (e.g. JACK, PipeWire) can set low DMA latency without root
 tee /etc/udev/rules.d/60-cpu-dma-latency.rules <<'EOF'
 DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
 EOF
 
-# Grant the 'audio' group access to HPET timers so real-time audio applications
-# can use them for high-resolution scheduling without root
-tee /etc/udev/rules.d/40-hpet-permissions.rules <<'EOF'
-KERNEL=="hpet", GROUP="audio"
-KERNEL=="rtc0", GROUP="audio"
-EOF
 
 # =============================================================================
 # Storage — I/O Schedulers & Link Power
