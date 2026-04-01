@@ -223,10 +223,12 @@ EOF
 # =============================================================================
 
 # Memory management — tuned for zswap + disk-backed swap:
-#   vm.swappiness=10                 — disk is slow; don't use it until necessary.
-#                                      (contrast: zram-only setups benefit from
-#                                      swappiness=150 because RAM is fast, but
-#                                      that would hammer the SSD here)
+#   vm.swappiness=30                 — with zswap, the first eviction tier is
+#                                      compressed RAM, not disk. Setting this to
+#                                      10 (correct for bare disk swap) defeats
+#                                      zswap by refusing to push cold anon pages
+#                                      into the fast compressed pool. 30 keeps
+#                                      file cache hot without hammering the SSD
 #   vm.page-cluster=3                — default read-ahead; sequential reads are
 #                                      cheap on NVMe/SSD so pre-faulting 2^3 = 8
 #                                      pages amortises I/O cost. Setting this to
@@ -245,7 +247,7 @@ EOF
 #                                      kswapd wakes less often but reclaims more
 #                                      when it does, reducing reclaim churn
 tee /etc/sysctl.d/99-memory.conf <<'EOF'
-vm.swappiness=10
+vm.swappiness=30
 vm.page-cluster=3
 vm.vfs_cache_pressure=50
 vm.dirty_ratio=10
@@ -299,16 +301,7 @@ kernel.sched_wakeup_granularity_ns=4000000
 kernel.sched_migration_cost_ns=1000000
 EOF
 
-
-# =============================================================================
-# Memory — Zswap & Transparent Huge Pages
-# =============================================================================
-
 # Disable zram — using zswap with a dedicated swap partition on the SSD instead.
-# zswap is integrated directly into the kernel's reclaim path and tiers cold
-# pages to disk automatically. zram has no equivalent: once it fills up there
-# is no eviction, leading to LRU inversion (cold pages locked in fast RAM while
-# your active working set gets pushed to slow disk).
 # See: https://chrisdown.name/2026/03/24/zswap-vs-zram-when-to-use-what.html
 mkdir -p /etc/systemd
 tee /etc/systemd/zram-generator.conf > /dev/null <<'EOF'
@@ -334,23 +327,24 @@ zswap.enabled=1 zswap.compressor=lz4 zswap.zpool=zsmalloc zswap.max_pool_percent
 EOF
 
 # Transparent Huge Pages
-#
+# See: https://github.com/max0x7ba/thp-usage
 # enabled=always       — all processes are eligible; reduces dTLB misses for
 #                        any workload with large anonymous memory regions
 # shmem_enabled=advise — only promote shared memory when explicitly requested,
 #                        avoiding overhead on small IPC buffers
-# defrag=defer+madvise — do NOT use defrag=always here. Synchronous compaction
-#                        (defrag=always) gives large throughput gains for batch
-#                        compute workloads (see: github.com/max0x7ba/thp-usage)
-#                        but causes frame-time spikes in games by stalling
-#                        page faults mid-frame. defer+madvise defers compaction
-#                        to khugepaged and only promotes on explicit madvise()
-#                        calls, which is the right tradeoff for interactive use
+# defrag=always        — allocate huge pages immediately on fault via synchronous
+#                        compaction. With defer+madvise, khugepaged is the only
+#                        path to huge pages for most processes; it scans at most
+#                        8GB per 79s pass, so short-lived processes (game launches,
+#                        parallel builds) get huge pages too late or not at all.
+#                        The "compaction stalls hurt latency" argument originates
+#                        from database workloads with per-request latency budgets
+#                        — not applicable here.
+#                        See: github.com/max0x7ba/thp-usage
 #
 # khugepaged tuning (from thp-usage benchmarks):
-#   pages_to_scan=2097152          — scan up to 8GB of VMAs per pass; allows
-#                                    khugepaged to catch up quickly after a
-#                                    large allocation without running constantly
+#   pages_to_scan=2097152          — scan up to 8GB of VMAs per pass; collapses
+#                                    any regions missed during synchronous fault
 #   scan_sleep_millisecs=79000     — scan every 79s; infrequent enough to avoid
 #                                    competing with foreground work
 #   max_ptes_none/shared=64        — allow collapsing regions with up to 64
@@ -361,7 +355,7 @@ EOF
 tee /etc/tmpfiles.d/thp.conf <<'EOF'
 w! /sys/kernel/mm/transparent_hugepage/enabled                    - - - - always
 w! /sys/kernel/mm/transparent_hugepage/shmem_enabled              - - - - advise
-w! /sys/kernel/mm/transparent_hugepage/defrag                     - - - - defer+madvise
+w! /sys/kernel/mm/transparent_hugepage/defrag                     - - - - always
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/pages_to_scan   - - - - 2097152
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs - - - - 79000
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none   - - - - 64
@@ -373,8 +367,7 @@ EOF
 # =============================================================================
 # systemd — OOM, Timeouts & Journal
 # =============================================================================
-# Using https://bytes.are.sexy/l/systemd_oomd_tuning as a reference for these
-# tunables.
+# See: https://oneuptime.com/blog/post/2026-03-02-how-to-configure-systemd-oomd-for-out-of-memory-handling-on-ubuntu
 
 # Tune systemd-oomd to act more aggressively than its conservative defaults.
 # Without this, oomd can let memory pressure build too long before killing
