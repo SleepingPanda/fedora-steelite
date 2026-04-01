@@ -453,7 +453,7 @@ EOF
 
 
 # =============================================================================
-# Gaming — Controllers & GPU Recovery
+# Gaming — Controllers & GPU Recovery, etc.
 # =============================================================================
 
 # Grant the 'input' group read/write access to gamepad and joystick nodes so
@@ -475,6 +475,12 @@ ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{PID}!="0", PROGRAM="/us
 ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart sddm"
 EOF
 
+# Allow the logged-in user to access /dev/ntsync so Wine/Proton can use
+# native NT sync primitives. Without this, the ntsync module is loaded but
+# the device is root-only and ignored by Proton at runtime.
+tee /etc/udev/rules.d/99-ntsync.rules <<'EOF'
+KERNEL=="ntsync", MODE="0660", TAG+="uaccess"
+EOF
 
 # =============================================================================
 # Service Enablement
