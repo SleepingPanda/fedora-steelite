@@ -165,16 +165,16 @@ dnf5 -y install \
 # Install direct RPMs fetched from upstream release pages.
 # Kept in separate dnf5 calls so a single failure is easy to identify and retry.
 
-# Winboat — Wine/Proton game launcher GUI
+# Winboat — Run Windows apps on Linux with seamless integration 
 dnf5 install -y "https://github.com/TibixDev/winboat/releases/download/v${WINBOAT_VERSION}/winboat-${WINBOAT_VERSION}-x86_64.rpm"
 
-# Bitwarden — password manager desktop client
+# Bitwarden — Bitwarden client app for linux desktops
 dnf5 install -y "https://github.com/bitwarden/clients/releases/download/desktop-v${BITWARDEN_VERSION}/Bitwarden-${BITWARDEN_VERSION}-x86_64.rpm"
 
-# Tabby — modern GPU-accelerated terminal emulator
+# Tabby — A terminal for a more modern age
 dnf5 install -y "https://github.com/Eugeny/tabby/releases/download/v${TABBY_VERSION}/tabby-${TABBY_VERSION}-linux-x64.rpm"
 
-# AppImage Thumbnailer — generates thumbnails for AppImage files in file managers
+# AppImage Thumbnailer — Generates AppImage thumbnails for Linux desktops
 dnf5 install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download/v${APPIMAGE_THUMBNAILER_VERSION}/appimage-thumbnailer-v${APPIMAGE_THUMBNAILER_VERSION}-1.x86_64.rpm"
 
 
