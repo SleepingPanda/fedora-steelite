@@ -125,7 +125,6 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 #   glycin-thumbnailer        — GNOME image thumbnailer
 #   ksshaskpass               — KDE SSH passphrase dialog (integrates with KWallet)
 #   nvme-cli                  — NVMe drive management and monitoring CLI
-#   webkit2gtk4.1             — WebKit rendering engine for embedded web content
 dnf5 -y install \
     --enablerepo=docker-ce \
     --enablerepo=lact \
@@ -161,8 +160,7 @@ dnf5 -y install \
     python3-pip \
     python3-pyicu \
     rpmdevtools \
-    steam \
-    webkit2gtk4.1
+    steam
 
 # Install direct RPMs fetched from upstream release pages.
 # Kept in separate dnf5 calls so a single failure is easy to identify and retry.
