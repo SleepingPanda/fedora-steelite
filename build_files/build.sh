@@ -12,18 +12,16 @@ set -eoux pipefail
 rm -rf /opt && mkdir /opt
 
 # ============================================================
-# Pinned versions for direct RPM installs
-# Check for updates at the links below and bump as needed.
+# Check for updates at the links below automatically.
 # ============================================================
 # https://github.com/TibixDev/winboat/releases
-WINBOAT_VERSION="0.9.0"
+WINBOAT_VERSION=$(curl -s "https://api.github.com/repos/TibixDev/winboat/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+')
 # https://github.com/Eugeny/tabby/releases
-TABBY_VERSION="1.0.230"
+TABBY_VERSION=$(curl -s "https://api.github.com/repos/Eugeny/tabby/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+')
 # https://github.com/kem-a/appimage-thumbnailer/releases
-APPIMAGE_THUMBNAILER_VERSION="4.0.0"
+APPIMAGE_THUMBNAILER_VERSION=$(curl -s "https://api.github.com/repos/kem-a/appimage-thumbnailer/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+')
 # https://github.com/bitwarden/clients/releases
-BITWARDEN_VERSION="2026.3.1"
-
+BITWARDEN_VERSION=$(curl -s "https://api.github.com/repos/bitwarden/clients/releases" | grep -oP '"tag_name"\s*:\s*"\Kdesktop-[^"]+' | head -1 | grep -oP '(?<=desktop-v).*')
 # =============================================================================
 # Repo Configuration
 # Each block imports the signing key and drops a .repo file into yum.repos.d.
