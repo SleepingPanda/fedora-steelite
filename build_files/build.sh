@@ -83,9 +83,15 @@ EOF
 # Package Installation
 # =============================================================================
 
+# rpmfusion-nonfree-nvidia-driver is a Fedora-bundled repo (not defined above)
+# and cannot be enabled inline with --enablerepo at install time because dnf5
+# requires the repo to be enabled before the swap transaction resolves the
+# ffmpeg provider. Setting it globally here is intentional; it is the only repo
+# that receives this treatment.
+dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
+
 # Replace the Fedora-bundled ffmpeg stub with the full build from RPM Fusion,
 # which includes patented codecs (H.264, AAC, etc.) not shipped by default
-dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 
 # Install all repo-based packages in a single transaction for efficiency.
@@ -261,8 +267,12 @@ EOF
 #   vm.max_map_count=1048576           — many Proton/Wine games require a high memory
 #                                        map count; the default (65530) causes silent
 #                                        crashes or launch failures in some titles
-#   vm.oom_kill_allocating_task=1      — immediately kill the process that just
-#                                        triggered the OOM
+#   vm.oom_kill_allocating_task=1      — immediately kill the task that triggered the
+#                                        kernel OOM killer. This is the last-resort
+#                                        fallback for processes not in a cgroup managed
+#                                        by systemd-oomd (see oomd.conf.d below);
+#                                        oomd acts first at cgroup granularity, this
+#                                        catches anything that slips through
 #   fs.inotify.max_user_watches        — VS Code and large dev projects exhaust the
 #   fs.inotify.max_user_instances        default limits, causing file watchers to
 #                                        silently stop working
@@ -278,7 +288,10 @@ EOF
 #                                        on single-socket desktop systems
 #   kernel.split_lock_mitigate=0       — suppress split-lock slowdowns; some older
 #                                        Windows game binaries under Proton trigger
-#                                        these and suffer severe performance penalties
+#                                        these and suffer severe performance penalties.
+#                                        Tradeoff: disables bus-lock detection
+#                                        (CVE-2021-33149 class); acceptable on a
+#                                        trusted single-user desktop
 tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
 vm.max_map_count=1048576
 vm.oom_kill_allocating_task=1
@@ -292,9 +305,11 @@ kernel.numa_balancing=0
 kernel.split_lock_mitigate=0
 EOF
 
+# Scheduler tunables for AMD FX (Bulldozer/Piledriver) module topology.
+# Remove this file on any CPU other than AMD FX-series (FX-4xxx/6xxx/8xxx,
+# ~2011–2014). On Zen, Intel, or any modern CPU, the upstream defaults are
+# better and these values will hurt scheduling latency.
 tee /etc/sysctl.d/99-amd-fx-scheduler.conf <<'EOF'
-# These values are tuned for AMD FX (Bulldozer/Piledriver) module topology.
-# On modern CPUs (Zen, Intel), remove this file. Defaults are better.
 kernel.sched_latency_ns=10000000
 kernel.sched_min_granularity_ns=3000000
 kernel.sched_wakeup_granularity_ns=4000000
@@ -302,10 +317,10 @@ kernel.sched_migration_cost_ns=1000000
 EOF
 
 # Disable zram — using zswap with a dedicated swap partition on the SSD instead.
+# An empty zram-generator.conf overrides any upstream or package-provided config
+# that would otherwise create a zram device on first boot.
 # See: https://chrisdown.name/2026/03/24/zswap-vs-zram-when-to-use-what.html
-mkdir -p /etc/systemd
-tee /etc/systemd/zram-generator.conf > /dev/null <<'EOF'
-EOF
+> /etc/systemd/zram-generator.conf
 
 # zswap kernel arguments — applied by bootc on fresh installs.
 # Existing deployments: run `rpm-ostree kargs --append=...` once manually.
@@ -375,17 +390,12 @@ EOF
 #                                          point means the compressed pool is
 #                                          exhausted and disk I/O is the only
 #                                          remaining fallback
-#   DefaultMemoryPressureLimit=60%       — upstream default; kill when 60% of
-#                                          wall time is spent stalled on memory.
-#                                          Raising this delays oomd — it does not
-#                                          make it more aggressive
 #   DefaultMemoryPressureDurationSec=20s — act after 20s of sustained pressure
 #                                          rather than the upstream default of 30s
 mkdir -p /etc/systemd/oomd.conf.d
 tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
 [OOM]
 SwapUsedLimit=85%
-DefaultMemoryPressureLimit=60%
 DefaultMemoryPressureDurationSec=20s
 EOF
 
@@ -467,11 +477,13 @@ EOF
 # GPU reset recovery for drm drivers — when the GPU hangs and resets, the
 # kernel exposes a RESET event with the PID of the offending process. These
 # rules:
-#   - On a GPU reset event, kill the owning PID to release the hung context
+#   - On a GPU reset event, kill the owning PID to release the hung context.
+#     ENV{PID}!="" guards against an unset PID expanding to an empty string,
+#     which would cause `test  -gt 1000` to error and skip the kill silently.
 #   - If the display server (SDDM) is involved, restart it to recover the
 #     desktop session cleanly
 tee /etc/udev/rules.d/80-gpu-reset.rules <<'EOF'
-ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{PID}!="0", PROGRAM="/usr/bin/bash -c 'test %E{PID} -gt 1000'", RUN+="/usr/bin/kill -9 %E{PID}"
+ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{PID}!="", ENV{PID}!="0", PROGRAM="/usr/bin/sh -c 'test %E{PID} -gt 1000'", RUN+="/usr/bin/kill -9 %E{PID}"
 ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart sddm"
 EOF
 
@@ -502,7 +514,9 @@ EOF
 
 # =============================================================================
 # Cleanup
-# Remove cached package metadata and downloaded RPMs to keep the image lean
+# Remove cached package metadata and downloaded RPMs to keep the image lean.
+# /var/lib/containers is cleared because akmods may pull container images
+# during kernel module builds; those are not needed in the final image.
 # =============================================================================
 dnf5 -y clean all
 rm -f /var/lib/systemd/random-seed
