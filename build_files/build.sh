@@ -15,11 +15,11 @@ rm -rf /opt && mkdir /opt
 # Check for updates at the links below automatically.
 # ============================================================
 # https://github.com/TibixDev/winboat/releases
-WINBOAT_VERSION=$(curl -s "https://api.github.com/repos/TibixDev/winboat/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+')
+WINBOAT_VERSION=$(curl -s "https://api.github.com/repos/TibixDev/winboat/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
 # https://github.com/Eugeny/tabby/releases
-TABBY_VERSION=$(curl -s "https://api.github.com/repos/Eugeny/tabby/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+')
+TABBY_VERSION=$(curl -s "https://api.github.com/repos/Eugeny/tabby/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
 # https://github.com/kem-a/appimage-thumbnailer/releases
-APPIMAGE_THUMBNAILER_VERSION=$(curl -s "https://api.github.com/repos/kem-a/appimage-thumbnailer/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+')
+APPIMAGE_THUMBNAILER_VERSION=$(curl -s "https://api.github.com/repos/kem-a/appimage-thumbnailer/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
 # https://github.com/bitwarden/clients/releases
 BITWARDEN_VERSION=$(curl -s "https://api.github.com/repos/bitwarden/clients/releases" | grep -oP '"tag_name"\s*:\s*"\Kdesktop-[^"]+' | head -1 | grep -oP '(?<=desktop-v).*')
 # =============================================================================
