@@ -124,14 +124,12 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 # System:
 #   glycin-thumbnailer        — GNOME image thumbnailer
 #   ksshaskpass               — KDE SSH passphrase dialog (integrates with KWallet)
-#   nvme-cli                  — NVMe drive management and monitoring CLI
 dnf5 -y install \
     --enablerepo=docker-ce \
     --enablerepo=lact \
     --enablerepo=rpmfusion-free \
     --enablerepo=rpmfusion-nonfree-steam \
     --enablerepo=vscode \
-    adwaita-icon-theme \
     akmods \
     android-tools \
     code \
@@ -144,11 +142,9 @@ dnf5 -y install \
     glycin-thumbnailer \
     gnome-themes-extra \
     gstreamer1-plugin-openh264 \
-    gstreamer1-plugins-bad-free \
     gstreamer1-plugins-bad-free-extras \
     gstreamer1-plugins-bad-freeworld \
     gstreamer1-plugins-ugly \
-    gstreamer1-plugins-ugly-free \
     gstreamer1-vaapi \
     ksshaskpass \
     lact \
@@ -156,7 +152,6 @@ dnf5 -y install \
     libratbag-ratbagd \
     libva-nvidia-driver \
     mangohud \
-    nvme-cli \
     python3-pip \
     python3-pyicu \
     rpmdevtools \
