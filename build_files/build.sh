@@ -267,6 +267,10 @@ EOF
 #   fs.inotify.max_user_watches        — VS Code and large dev projects exhaust the
 #   fs.inotify.max_user_instances        default limits, causing file watchers to
 #                                        silently stop working
+#   fs.file-max=2097152                — system-wide cap on open file
+#                                        descriptors; large dev environments,
+#                                        container runtimes, and parallel
+#                                        builds exhaust the default (1,048,576)
 #   kernel.perf_event_paranoid=1       — allows unprivileged perf access needed by
 #                                        MangoHud and other overlay/profiling tools
 #   kernel.nmi_watchdog=0              — disables the NMI watchdog, which generates
