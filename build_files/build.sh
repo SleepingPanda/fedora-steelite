@@ -300,6 +300,27 @@ EOF
 # Remove this file on any CPU other than AMD FX-series (FX-4xxx/6xxx/8xxx,
 # ~2011–2014). On Zen, Intel, or any modern CPU, the upstream defaults are
 # better and these values will hurt scheduling latency.
+#
+#   kernel.sched_latency_ns=10000000      — CFS scheduling period: all runnable
+#                                           tasks are guaranteed a slot within
+#                                           this window. 10ms vs the 6ms default
+#                                           reduces context-switch frequency;
+#                                           Bulldozer pays a high per-switch cost
+#                                           from shared integer cluster state
+#   kernel.sched_min_granularity_ns=3000000 — minimum timeslice before preemption
+#                                           (3ms). Longer slices amortise the FX
+#                                           switch cost from shared fetch/decode
+#                                           state within each two-core module
+#   kernel.sched_wakeup_granularity_ns=4000000 — a waking task must lead the
+#                                           running task by this much in vruntime
+#                                           before it can preempt (4ms vs 1ms
+#                                           default). Suppresses thrash from
+#                                           threads competing on the same module's
+#                                           shared dispatch port
+#   kernel.sched_migration_cost_ns=1000000 — treat a task as cache-hot for 1ms
+#                                           after it runs; discourages migration
+#                                           across module boundaries where L2 is
+#                                           not shared, reducing cold-cache misses
 tee /etc/sysctl.d/99-amd-fx-scheduler.conf <<'EOF'
 kernel.sched_latency_ns=10000000
 kernel.sched_min_granularity_ns=3000000
