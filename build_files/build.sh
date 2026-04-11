@@ -428,6 +428,14 @@ SSH_ASKPASS_REQUIRE=prefer
 GIT_ASKPASS=/usr/bin/ksshaskpass
 EOF
 
+## nvidia-vaapi-driver Source:
+## https://github.com/elFarto/nvidia-vaapi-driver?tab=readme-ov-file#configuration
+tee /etc/environment.d/50-vaapi.conf <<'EOF'
+NVD_BACKEND=direct
+LIBVA_DRIVER_NAME=nvidia
+CUDA_DISABLE_PERF_BOOST=1
+EOF
+
 
 # =============================================================================
 # Audio — Realtime Scheduling
