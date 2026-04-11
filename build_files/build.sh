@@ -396,32 +396,16 @@ EOF
 
 
 # =============================================================================
-# systemd — OOM, Timeouts & Journal
+# systemd
 # =============================================================================
 # See: https://raw.githubusercontent.com/OneUptime/blog/refs/heads/master/posts/2026-03-04-systemd-oomd-out-of-memory-management-rhel-9/README.md
 
 # Tune systemd-oomd for slightly earlier intervention than upstream defaults.
-#   SwapUsedLimit=85%                    — kill when SSD swap is 85% full; with
-#                                          zswap tiering to disk, reaching this
-#                                          point means the compressed pool is
-#                                          exhausted and disk I/O is the only
-#                                          remaining fallback
-#   DefaultMemoryPressureDurationSec=20s — act after 20s of sustained pressure
-#                                          rather than the upstream default of 30s
 mkdir -p /etc/systemd/oomd.conf.d
 tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
 [OOM]
 SwapUsedLimit=85%
 DefaultMemoryPressureDurationSec=20s
-EOF
-
-# Reduce service start/stop timeouts from the 90s default. On a desktop/gaming
-# system a hung unit shouldn't hold up the session or shutdown for that long.
-mkdir -p /etc/systemd/system.conf.d
-tee /etc/systemd/system.conf.d/00-timeouts.conf <<'EOF'
-[Manager]
-DefaultTimeoutStartSec=30s
-DefaultTimeoutStopSec=15s
 EOF
 
 # Cap the systemd journal at 150 MB to prevent unbounded disk usage
@@ -434,6 +418,14 @@ EOF
 # Retain core dumps for 3 days, then clean them up automatically
 tee /etc/tmpfiles.d/coredump.conf <<'EOF'
 d /var/lib/systemd/coredump 0755 root root 3d
+EOF
+
+# Configure the system and git to use ksshaskpass for SSH passphrase prompts.
+mkdir -p /etc/environment.d
+tee /etc/environment.d/50-ssh-askpass.conf <<'EOF'
+SSH_ASKPASS=/usr/bin/ksshaskpass
+SSH_ASKPASS_REQUIRE=prefer
+GIT_ASKPASS=/usr/bin/ksshaskpass
 EOF
 
 
@@ -510,6 +502,7 @@ tee /etc/udev/rules.d/99-ntsync.rules <<'EOF'
 KERNEL=="ntsync", MODE="0660", TAG+="uaccess"
 EOF
 
+
 # =============================================================================
 # Service Enablement
 # =============================================================================
@@ -519,13 +512,6 @@ systemctl enable \
     lactd.service \
     ratbagd.service \
     systemd-oomd.service
-
-
-mkdir -p /etc/environment.d
-tee /etc/environment.d/50-ssh-askpass.conf <<'EOF'
-SSH_ASKPASS=/usr/bin/ksshaskpass
-SSH_ASKPASS_REQUIRE=prefer
-EOF
 
 
 # =============================================================================
