@@ -436,6 +436,12 @@ LIBVA_DRIVER_NAME=nvidia
 CUDA_DISABLE_PERF_BOOST=1
 EOF
 
+# Increase Nvidia's shader cache size to 12GB
+# https://wiki.cachyos.org/configuration/gaming/#increase-maximum-shader-cache-size
+tee /etc/environment.d/50-nvidia-cache.conf <<'EOF'
+__GL_SHADER_DISK_CACHE_SIZE=12000000000
+EOF
+
 
 # =============================================================================
 # Audio — Realtime Scheduling
