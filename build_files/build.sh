@@ -519,7 +519,7 @@ EOF
 # native NT sync primitives. Without this, the ntsync module is loaded but
 # the device is root-only and ignored by Proton at runtime.
 tee /etc/udev/rules.d/99-ntsync.rules <<'EOF'
-KERNEL=="ntsync", MODE="0660", TAG+="uaccess"
+KERNEL=="ntsync", group="gamemode", MODE="0660", TAG+="uaccess"
 EOF
 
 
