@@ -130,6 +130,7 @@ dnf5 -y install \
     --enablerepo=rpmfusion-free \
     --enablerepo=rpmfusion-nonfree-steam \
     --enablerepo=vscode \
+    adw-gtk3-theme \
     akmods \
     android-tools \
     code \
@@ -138,6 +139,7 @@ dnf5 -y install \
     docker-ce-cli \
     docker-buildx-plugin \
     docker-compose-plugin \
+    ffmpegthumbnailer \
     gamescope \
     glycin-thumbnailer \
     gnome-themes-extra \
@@ -146,12 +148,16 @@ dnf5 -y install \
     gstreamer1-plugins-bad-freeworld \
     gstreamer1-plugins-ugly \
     gstreamer1-vaapi \
+    heif-pixbuf-loader \
     ksshaskpass \
     lact \
     libgee \
+    libheif-freeworld \
+    libheif-tools \
     libratbag-ratbagd \
     libva-nvidia-driver \
     mangohud \
+    pipewire-codec-aptx \
     python3-pip \
     python3-pyicu \
     rpmdevtools \
