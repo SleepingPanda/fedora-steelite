@@ -99,6 +99,7 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 # Development tools:
 #   android-tools             — ADB/fastboot for Android device management
 #   code                      — Visual Studio Code editor
+#   kate                      — KDE text editor with good performance on large files
 #   python3-pip               — Python package installer
 #   python3-pyicu             — Python bindings for ICU (Unicode/locale support)
 #   rpmdevtools               — RPM packaging utilities
@@ -115,14 +116,19 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 #
 # GPU & Media:
 #   akmods                    — builds kernel modules (e.g. NVIDIA) on upgrade
+#   ffmpegthumbnailer         — generates video thumbnails for file managers
+#   glycin-thumbnailer        — GNOME image thumbnailer
 #   gstreamer1-plugin-*       — additional codec support (H.264, ugly/bad sets)
 #   gstreamer1-vaapi          — VA-API hardware video decode/encode via GStreamer
+#   heif-pixbuf-loader        — HEIF image format support in GNOME and KDE
 #   lact                      — AMD GPU control application
-#   libgee                    — GLib collection library (LACT dependency)
+#   libheif-freeworld         — HEIF image format support with patented codecs
+#   libheif-tools             — CLI tools for inspecting and converting HEIF files
 #   libva-nvidia-driver       — VA-API backend for NVIDIA GPUs
+#   pipewire-codec-aptx       — Qualcomm aptX Bluetooth audio codec plugin for PipeWire
 #
 # System:
-#   glycin-thumbnailer        — GNOME image thumbnailer
+#   adw-gtk3-theme            — modern GTK theme for a polished desktop
 #   ksshaskpass               — KDE SSH passphrase dialog (integrates with KWallet)
 dnf5 -y install \
     --enablerepo=docker-ce \
@@ -149,6 +155,7 @@ dnf5 -y install \
     gstreamer1-plugins-ugly \
     gstreamer1-vaapi \
     heif-pixbuf-loader \
+    kate \
     ksshaskpass \
     lact \
     libgee \
