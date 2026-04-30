@@ -97,39 +97,41 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 # metadata cache.
 #
 # Development tools:
-#   android-tools             — ADB/fastboot for Android device management
-#   code                      — Visual Studio Code editor
-#   kate                      — KDE text editor with good performance on large files
-#   python3-pip               — Python package installer
-#   python3-pyicu             — Python bindings for ICU (Unicode/locale support)
-#   rpmdevtools               — RPM packaging utilities
+#   android-tools               — ADB/fastboot for Android device management
+#   code                        — Visual Studio Code editor
+#   kate                        — KDE text editor with good performance on large files
+#   nodejs-bash-language-server — Bash language server for use with Kate
+#   python3-lsp-server          — Python language server for use with Kate
+#   python3-pip                 — Python package installer
+#   python3-pyicu               — Python bindings for ICU (Unicode/locale support)
+#   rpmdevtools                 — RPM packaging utilities
 #
 # Docker:
-#   containerd.io             — container runtime required by Docker CE
-#   docker-ce / cli / plugins — Docker engine, CLI, buildx, and compose
+#   containerd.io               — container runtime required by Docker CE
+#   docker-ce / cli / plugins   — Docker engine, CLI, buildx, and compose
 #
 # Gaming:
-#   gamescope                 — Valve's micro-compositor for gaming sessions
-#   libratbag-ratbagd         — gaming mouse configuration daemon
-#   mangohud                  — in-game performance overlay
-#   steam                     — Valve Steam client
+#   gamescope                   — Valve's micro-compositor for gaming sessions
+#   libratbag-ratbagd           — gaming mouse configuration daemon
+#   mangohud                    — in-game performance overlay
+#   steam                       — Valve Steam client
 #
 # GPU & Media:
-#   akmods                    — builds kernel modules (e.g. NVIDIA) on upgrade
-#   ffmpegthumbnailer         — generates video thumbnails for file managers
-#   glycin-thumbnailer        — GNOME image thumbnailer
-#   gstreamer1-plugin-*       — additional codec support (H.264, ugly/bad sets)
-#   gstreamer1-vaapi          — VA-API hardware video decode/encode via GStreamer
-#   heif-pixbuf-loader        — HEIF image format support in GNOME and KDE
-#   lact                      — AMD GPU control application
-#   libheif-freeworld         — HEIF image format support with patented codecs
-#   libheif-tools             — CLI tools for inspecting and converting HEIF files
-#   libva-nvidia-driver       — VA-API backend for NVIDIA GPUs
-#   pipewire-codec-aptx       — Qualcomm aptX Bluetooth audio codec plugin for PipeWire
+#   akmods                      — builds kernel modules (e.g. NVIDIA) on upgrade
+#   ffmpegthumbnailer           — generates video thumbnails for file managers
+#   glycin-thumbnailer          — GNOME image thumbnailer
+#   gstreamer1-plugin-*         — additional codec support (H.264, ugly/bad sets)
+#   gstreamer1-vaapi            — VA-API hardware video decode/encode via GStreamer
+#   heif-pixbuf-loader          — HEIF image format support in GNOME and KDE
+#   lact                        — AMD GPU control application
+#   libheif-freeworld           — HEIF image format support with patented codecs
+#   libheif-tools               — CLI tools for inspecting and converting HEIF files
+#   libva-nvidia-driver         — VA-API backend for NVIDIA GPUs
+#   pipewire-codec-aptx         — Qualcomm aptX Bluetooth audio codec plugin for PipeWire
 #
 # System:
-#   adw-gtk3-theme            — modern GTK theme for a polished desktop
-#   ksshaskpass               — KDE SSH passphrase dialog (integrates with KWallet)
+#   adw-gtk3-theme              — modern GTK theme for a polished desktop
+#   ksshaskpass                 — KDE SSH passphrase dialog (integrates with KWallet)
 dnf5 -y install \
     --enablerepo=docker-ce \
     --enablerepo=lact \
@@ -163,8 +165,10 @@ dnf5 -y install \
     libheif-tools \
     libratbag-ratbagd \
     libva-nvidia-driver \
+    nodejs-bash-language-server \
     mangohud \
     pipewire-codec-aptx \
+    python3-lsp-server \
     python3-pip \
     python3-pyicu \
     rpmdevtools \
