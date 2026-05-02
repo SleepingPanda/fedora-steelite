@@ -150,14 +150,12 @@ dnf5 -y install \
     ffmpegthumbnailer \
     gamescope \
     glycin-thumbnailer \
-    gnome-themes-extra \
     gstreamer1-plugin-openh264 \
     gstreamer1-plugins-bad-free-extras \
     gstreamer1-plugins-bad-freeworld \
     gstreamer1-plugins-ugly \
     gstreamer1-vaapi \
     heif-pixbuf-loader \
-    ksshaskpass \
     lact \
     libgee \
     libheif-freeworld \
