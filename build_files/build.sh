@@ -157,7 +157,6 @@ dnf5 -y install \
     gstreamer1-plugins-ugly \
     gstreamer1-vaapi \
     heif-pixbuf-loader \
-    kate \
     ksshaskpass \
     lact \
     libgee \
@@ -165,10 +164,8 @@ dnf5 -y install \
     libheif-tools \
     libratbag-ratbagd \
     libva-nvidia-driver \
-    nodejs-bash-language-server \
     mangohud \
     pipewire-codec-aptx \
-    python3-lsp-server \
     python3-pip \
     python3-pyicu \
     rpmdevtools \
