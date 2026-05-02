@@ -216,12 +216,6 @@ EOF
 # Kernel Modules
 # =============================================================================
 
-# Load the ntsync module at boot — provides a native futex-based NT sync
-# mechanism that improves Wine/Proton synchronization performance
-tee /etc/modules-load.d/ntsync.conf <<'EOF'
-ntsync
-EOF
-
 # Disable NVMe power management latency tolerance — prevents the controller
 # from downclocking during I/O bursts
 tee /etc/modprobe.d/nvme.conf <<'EOF'
@@ -408,6 +402,11 @@ w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_shared - - - - 64
 w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_swap   - - - - 0
 EOF
 
+# Mitigations — disable CPU vulnerability mitigations for maximum performance.
+tee /usr/lib/bootloader.d/mitigations.conf <<'EOF'
+mitigations=off
+EOF
+
 
 # =============================================================================
 # systemd
@@ -524,7 +523,7 @@ ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr
 EOF
 
 # Allow the logged-in user to access /dev/ntsync so Wine/Proton can use
-# native NT sync primitives. Without this, the ntsync module is loaded but
+# native NTsync primitives. Without this, the ntsync module is loaded but
 # the device is root-only and ignored by Proton at runtime.
 tee /etc/udev/rules.d/99-ntsync.rules <<'EOF'
 KERNEL=="ntsync", group="gamemode", MODE="0660", TAG+="uaccess"
