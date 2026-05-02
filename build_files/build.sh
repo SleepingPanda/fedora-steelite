@@ -512,11 +512,11 @@ EOF
 #   - On a GPU reset event, kill the owning PID to release the hung context.
 #     ENV{PID}!="" guards against an unset PID expanding to an empty string,
 #     which would cause `test  -gt 1000` to error and skip the kill silently.
-#   - If the display server (SDDM) is involved, restart it to recover the
+#   - If the display server (Plasma Login Manager) is involved, restart it to recover the
 #     desktop session cleanly
 tee /etc/udev/rules.d/80-gpu-reset.rules <<'EOF'
 ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{PID}!="", ENV{PID}!="0", PROGRAM="/usr/bin/sh -c 'test %E{PID} -gt 1000'", RUN+="/usr/bin/kill -9 %E{PID}"
-ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart sddm"
+ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart plasmalogin"
 EOF
 
 # Allow the logged-in user to access /dev/ntsync so Wine/Proton can use
