@@ -38,6 +38,18 @@ gpgcheck=1
 gpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-free-fedora-$releasever
 EOF
 
+# RPM Fusion Nonfree NVIDIA — provides the proprietary NVIDIA driver
+tee /etc/yum.repos.d/rpmfusion-nonfree-nvidia.repo <<'EOF'
+[rpmfusion-nonfree-nvidia]
+name=RPM Fusion for Fedora $releasever - Nonfree - NVIDIA driver
+baseurl=http://muug.ca/mirror/rpmfusion/nonfree/fedora/releases/$releasever/Everything/$basearch/os/
+enabled=1
+type=rpm
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-nonfree-fedora-$releasever
+EOF
+
 # Docker CE — upstream Docker engine, CLI, and compose plugin
 rpm --import https://download.docker.com/linux/fedora/gpg
 tee /etc/yum.repos.d/docker-ce.repo <<'EOF'
@@ -78,13 +90,6 @@ EOF
 # =============================================================================
 # Package Installation
 # =============================================================================
-
-# rpmfusion-nonfree-nvidia-driver is a Fedora-bundled repo (not defined above)
-# and cannot be enabled inline with --enablerepo at install time because dnf5
-# requires the repo to be enabled before the swap transaction resolves the
-# ffmpeg provider. Setting it globally here is intentional; it is the only repo
-# that receives this treatment.
-dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 
 # Replace the Fedora-bundled ffmpeg stub with the full build from RPM Fusion,
 # which includes patented codecs (H.264, AAC, etc.) not shipped by default
