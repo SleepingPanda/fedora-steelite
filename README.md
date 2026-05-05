@@ -17,14 +17,12 @@ A heavily customized, immutable [Fedora Kinoite](https://fedoraproject.org/kinoi
 - **Steam** with gaming optimizations
 - **MangoHUD** for FPS monitoring and overlay
 - **Gamescope** Valve micro-compositor for gaming sessions
-- **Winboat** for seamless Windows app integration
 - **LACT** for GPU metrics, fan control, and overclocking
 - **libratbag** for gaming mouse configuration
 - Advanced codec support (OpenH.264, VA-API, GStreamer bad/ugly/freeworld)
 
 ### Security & System
 - **Bitwarden** desktop with biometric and SSH-Agent support
-- ntsync kernel module (native NT sync primitives for Wine/Proton)
 - zswap compressed swap cache backed by a dedicated swap partition
 - Tuned journald, VM, and I/O scheduler behaviour for performance
 - Proper audio and input group management
