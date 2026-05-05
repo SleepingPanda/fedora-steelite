@@ -14,8 +14,6 @@ rm -rf /opt && mkdir /opt
 # ============================================================
 # Check for updates at the links below automatically.
 # ============================================================
-# https://github.com/TibixDev/winboat/releases
-WINBOAT_VERSION=$(curl -s "https://api.github.com/repos/TibixDev/winboat/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
 # https://github.com/Eugeny/tabby/releases
 TABBY_VERSION=$(curl -s "https://api.github.com/repos/Eugeny/tabby/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
 # https://github.com/kem-a/appimage-thumbnailer/releases
@@ -99,9 +97,6 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 # Development tools:
 #   android-tools               — ADB/fastboot for Android device management
 #   code                        — Visual Studio Code editor
-#   kate                        — KDE text editor with good performance on large files
-#   nodejs-bash-language-server — Bash language server for use with Kate
-#   python3-lsp-server          — Python language server for use with Kate
 #   python3-pip                 — Python package installer
 #   python3-pyicu               — Python bindings for ICU (Unicode/locale support)
 #   rpmdevtools                 — RPM packaging utilities
@@ -170,9 +165,6 @@ dnf5 -y install \
 
 # Install direct RPMs fetched from upstream release pages.
 # Kept in separate dnf5 calls so a single failure is easy to identify and retry.
-
-# Winboat — Run Windows apps on Linux with seamless integration 
-dnf5 install -y "https://github.com/TibixDev/winboat/releases/download/v${WINBOAT_VERSION}/winboat-${WINBOAT_VERSION}-x86_64.rpm"
 
 # Bitwarden — Bitwarden client app for linux desktops
 dnf5 install -y "https://github.com/bitwarden/clients/releases/download/desktop-v${BITWARDEN_VERSION}/Bitwarden-${BITWARDEN_VERSION}-x86_64.rpm"
