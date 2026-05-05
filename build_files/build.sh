@@ -131,7 +131,6 @@ dnf5 -y install \
     --enablerepo=docker-ce \
     --enablerepo=lact \
     --enablerepo=rpmfusion-free \
-    --enablerepo=rpmfusion-nonfree-steam \
     --enablerepo=vscode \
     adw-gtk3-theme \
     akmods \
@@ -160,7 +159,18 @@ dnf5 -y install \
     pipewire-codec-aptx \
     python3-pip \
     python3-pyicu \
-    rpmdevtools \
+    rpmdevtools
+
+# Steam pulls in i686 GCC runtime libs older than what the base image ships,
+# which would downgrade libgcc/libstdc++ system-wide and break post-install
+# scriptlets. Exclude those packages so Steam uses the base image's versions.
+dnf5 -y install \
+    --enablerepo=rpmfusion-nonfree-steam \
+    --exclude='libgcc' \
+    --exclude='libstdc++' \
+    --exclude='libgomp' \
+    --exclude='libatomic' \
+    --exclude='cpp' \
     steam
 
 # Install direct RPMs fetched from upstream release pages.
