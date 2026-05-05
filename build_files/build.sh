@@ -177,11 +177,11 @@ dnf5 -y install \
 # scriptlets. Exclude those packages so Steam uses the base image's versions.
 dnf5 -y install \
     --enablerepo=rpmfusion-nonfree-steam \
-    --exclude='libgcc' \
-    --exclude='libstdc++' \
-    --exclude='libgomp' \
-    --exclude='libatomic' \
-    --exclude='cpp' \
+    --exclude='libgcc.x86_64' \
+    --exclude='libstdc++.x86_64' \
+    --exclude='libgomp.x86_64' \
+    --exclude='libatomic.x86_64' \
+    --exclude='cpp.x86_64' \
     steam
 
 # Install direct RPMs fetched from upstream release pages.
