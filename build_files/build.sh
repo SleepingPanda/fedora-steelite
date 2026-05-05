@@ -6,7 +6,7 @@
 # =============================================================================
 
 set -eoux pipefail
-
+GITHUB_TOKEN=$(cat /run/secrets/github_token)
 # Replace the /opt symlink with a real directory so the path becomes immutable
 # (prevents downstream layers from accidentally writing through a symlink)
 rm -rf /opt && mkdir /opt
@@ -15,11 +15,17 @@ rm -rf /opt && mkdir /opt
 # Check for updates at the links below automatically.
 # ============================================================
 # https://github.com/Eugeny/tabby/releases
-TABBY_VERSION=$(curl -s "https://api.github.com/repos/Eugeny/tabby/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
+TABBY_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+"https://api.github.com/repos/Eugeny/tabby/releases/latest" | grep -oP \
+'"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
 # https://github.com/kem-a/appimage-thumbnailer/releases
-APPIMAGE_THUMBNAILER_VERSION=$(curl -s "https://api.github.com/repos/kem-a/appimage-thumbnailer/releases/latest" | grep -oP '"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
+APPIMAGE_THUMBNAILER_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+"https://api.github.com/repos/kem-a/appimage-thumbnailer/releases/latest" | grep -oP \
+'"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
 # https://github.com/bitwarden/clients/releases
-BITWARDEN_VERSION=$(curl -s "https://api.github.com/repos/bitwarden/clients/releases" | grep -oP '"tag_name"\s*:\s*"\Kdesktop-[^"]+' | head -1 | grep -oP '(?<=desktop-v).*')
+BITWARDEN_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+"https://api.github.com/repos/bitwarden/clients/releases" | grep -oP \
+'"tag_name"\s*:\s*"\Kdesktop-[^"]+' | head -1 | grep -oP '(?<=desktop-v).*')
 # =============================================================================
 # Repo Configuration
 # Each block imports the signing key and drops a .repo file into yum.repos.d.
