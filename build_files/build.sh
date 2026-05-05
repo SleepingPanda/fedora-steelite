@@ -152,6 +152,8 @@ dnf5 -y install \
     docker-ce-cli \
     docker-buildx-plugin \
     docker-compose-plugin \
+    fuse \
+    fuse-libs \
     ffmpegthumbnailer \
     gamescope \
     glycin-thumbnailer \
