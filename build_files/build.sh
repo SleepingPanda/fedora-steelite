@@ -7,13 +7,17 @@
 
 set -eoux pipefail
 GITHUB_TOKEN=$(cat /run/secrets/github_token)
+
+
 # Replace the /opt symlink with a real directory so the path becomes immutable
 # (prevents downstream layers from accidentally writing through a symlink)
 rm -rf /opt && mkdir /opt
 
+
 # ============================================================
 # Check for updates at the links below automatically.
 # ============================================================
+
 # https://github.com/Eugeny/tabby/releases
 TABBY_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
 "https://api.github.com/repos/Eugeny/tabby/releases/latest" | grep -oP \
@@ -26,6 +30,8 @@ APPIMAGE_THUMBNAILER_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}
 BITWARDEN_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
 "https://api.github.com/repos/bitwarden/clients/releases" | grep -oP \
 '"tag_name"\s*:\s*"\Kdesktop-[^"]+' | head -1 | grep -oP '(?<=desktop-v).*')
+
+
 # =============================================================================
 # Repo Configuration
 # Each block imports the signing key and drops a .repo file into yum.repos.d.
@@ -263,16 +269,16 @@ EOF
 #   vm.watermark_scale_factor=125    — widen the gap between low/high watermarks so
 #                                      kswapd wakes less often but reclaims more
 #                                      when it does, reducing reclaim churn
-tee /etc/sysctl.d/99-memory.conf <<'EOF'
-vm.swappiness=30
-vm.page-cluster=3
-vm.vfs_cache_pressure=50
-vm.dirty_ratio=10
-vm.dirty_background_ratio=5
-vm.compaction_proactiveness=0
-vm.watermark_boost_factor=0
-vm.watermark_scale_factor=125
-EOF
+# tee /etc/sysctl.d/99-memory.conf <<'EOF'
+# vm.swappiness=30
+# vm.page-cluster=3
+# vm.vfs_cache_pressure=50
+# vm.dirty_ratio=10
+# vm.dirty_background_ratio=5
+# vm.compaction_proactiveness=0
+# vm.watermark_boost_factor=0
+# vm.watermark_scale_factor=125
+# EOF
 
 # Gaming and development tunables:
 #   vm.max_map_count=1048576           — many Proton/Wine games require a high memory
@@ -307,18 +313,18 @@ EOF
 #                                        Tradeoff: disables bus-lock detection
 #                                        (CVE-2021-33149 class); acceptable on a
 #                                        trusted single-user desktop
-tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
-vm.max_map_count=1048576
-vm.oom_kill_allocating_task=1
-fs.inotify.max_user_watches=524288
-fs.inotify.max_user_instances=512
-fs.file-max=2097152
-kernel.perf_event_paranoid=1
-kernel.nmi_watchdog=0
-kernel.sched_autogroup_enabled=1
-kernel.numa_balancing=0
-kernel.split_lock_mitigate=0
-EOF
+# tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
+# vm.max_map_count=1048576
+# vm.oom_kill_allocating_task=1
+# fs.inotify.max_user_watches=524288
+# fs.inotify.max_user_instances=512
+# fs.file-max=2097152
+# kernel.perf_event_paranoid=1
+# kernel.nmi_watchdog=0
+# kernel.sched_autogroup_enabled=1
+# kernel.numa_balancing=0
+# kernel.split_lock_mitigate=0
+# EOF
 
 # Scheduler tunables for AMD FX (Bulldozer/Piledriver) module topology.
 # Remove this file on any CPU other than AMD FX-series (FX-4xxx/6xxx/8xxx,
@@ -403,16 +409,16 @@ EOF
 #                                    coverage on real workloads
 #   max_ptes_swap=0                — do not collapse regions with pages currently
 #                                    on swap; avoids unnecessary disk I/O
-tee /etc/tmpfiles.d/thp.conf <<'EOF'
-w! /sys/kernel/mm/transparent_hugepage/enabled                    - - - - always
-w! /sys/kernel/mm/transparent_hugepage/shmem_enabled              - - - - advise
-w! /sys/kernel/mm/transparent_hugepage/defrag                     - - - - always
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/pages_to_scan   - - - - 2097152
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs - - - - 79000
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none   - - - - 64
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_shared - - - - 64
-w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_swap   - - - - 0
-EOF
+# tee /etc/tmpfiles.d/thp.conf <<'EOF'
+# w! /sys/kernel/mm/transparent_hugepage/enabled                    - - - - always
+# w! /sys/kernel/mm/transparent_hugepage/shmem_enabled              - - - - advise
+# w! /sys/kernel/mm/transparent_hugepage/defrag                     - - - - always
+# w! /sys/kernel/mm/transparent_hugepage/khugepaged/pages_to_scan   - - - - 2097152
+# w! /sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs - - - - 79000
+# w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none   - - - - 64
+# w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_shared - - - - 64
+# w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_swap   - - - - 0
+# EOF
 
 # Mitigations — disable CPU vulnerability mitigations for maximum performance.
 tee /usr/lib/bootloader.d/mitigations.conf <<'EOF'
@@ -426,12 +432,12 @@ EOF
 # See: https://raw.githubusercontent.com/OneUptime/blog/refs/heads/master/posts/2026-03-04-systemd-oomd-out-of-memory-management-rhel-9/README.md
 
 # Tune systemd-oomd for slightly earlier intervention than upstream defaults.
-mkdir -p /etc/systemd/oomd.conf.d
-tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
-[OOM]
-SwapUsedLimit=85%
-DefaultMemoryPressureDurationSec=20s
-EOF
+# mkdir -p /etc/systemd/oomd.conf.d
+# tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
+# [OOM]
+# SwapUsedLimit=85%
+# DefaultMemoryPressureDurationSec=20s
+# EOF
 
 # Cap the systemd journal at 150 MB to prevent unbounded disk usage
 mkdir -p /etc/systemd/journald.conf.d
@@ -474,9 +480,9 @@ EOF
 
 # Grant the 'audio' group access to /dev/cpu_dma_latency so real-time audio
 # applications (e.g. JACK, PipeWire) can set low DMA latency without root
-tee /etc/udev/rules.d/60-cpu-dma-latency.rules <<'EOF'
-DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
-EOF
+# tee /etc/udev/rules.d/60-cpu-dma-latency.rules <<'EOF'
+# DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
+# EOF
 
 
 # =============================================================================
@@ -494,19 +500,19 @@ EOF
 #           (game asset packs, build artefacts).
 #   SSDs  — mq-deadline for low-latency sequential I/O; modest read-ahead.
 #   eMMC  — same treatment as SSD.
-tee /etc/udev/rules.d/60-ioschedulers.rules <<'EOF'
-ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ATTR{queue/scheduler}="none", ATTR{queue/rq_affinity}="2", ATTR{queue/read_ahead_kb}="128"
-ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq", ATTR{queue/read_ahead_kb}="2048"
-ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
-ACTION=="add|change", KERNEL=="mmcblk[0-9]*", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
-EOF
+# tee /etc/udev/rules.d/60-ioschedulers.rules <<'EOF'
+# ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ATTR{queue/scheduler}="none", ATTR{queue/rq_affinity}="2", ATTR{queue/read_ahead_kb}="128"
+# ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq", ATTR{queue/read_ahead_kb}="2048"
+# ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
+# ACTION=="add|change", KERNEL=="mmcblk[0-9]*", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
+# EOF
 
 # Force SCSI/SATA link power management to max_performance, preventing the
 # host controller from downclocking links to save power (avoids I/O latency
 # spikes on spinning drives and some SSDs)
-tee /etc/udev/rules.d/61-scsi-link-power.rules <<'EOF'
-ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
-EOF
+# tee /etc/udev/rules.d/61-scsi-link-power.rules <<'EOF'
+# ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
+# EOF
 
 
 # =============================================================================
@@ -529,10 +535,10 @@ EOF
 #     which would cause `test  -gt 1000` to error and skip the kill silently.
 #   - If the display server (Plasma Login Manager) is involved, restart it to recover the
 #     desktop session cleanly
-tee /etc/udev/rules.d/80-gpu-reset.rules <<'EOF'
-ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{PID}!="", ENV{PID}!="0", PROGRAM="/usr/bin/sh -c 'test %E{PID} -gt 1000'", RUN+="/usr/bin/kill -9 %E{PID}"
-ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart plasmalogin"
-EOF
+# tee /etc/udev/rules.d/80-gpu-reset.rules <<'EOF'
+# ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{PID}!="", ENV{PID}!="0", PROGRAM="/usr/bin/sh -c 'test %E{PID} -gt 1000'", RUN+="/usr/bin/kill -9 %E{PID}"
+# ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart plasmalogin"
+# EOF
 
 # Allow the logged-in user to access /dev/ntsync so Wine/Proton can use
 # native NTsync primitives. Without this, the ntsync module is loaded but
@@ -549,8 +555,7 @@ systemctl enable \
     containerd.service \
     docker.service \
     lactd.service \
-    ratbagd.service \
-    systemd-oomd.service
+    ratbagd.service
 
 
 # =============================================================================
@@ -560,7 +565,6 @@ systemctl enable \
 # during kernel module builds; those are not needed in the final image.
 # =============================================================================
 dnf5 -y clean all
-rm -f /var/lib/systemd/random-seed
 rm -rf \
     /var/lib/dnf \
     /var/lib/containers \
