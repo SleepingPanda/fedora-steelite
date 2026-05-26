@@ -245,87 +245,6 @@ EOF
 # Kernel Tunables (sysctl)
 # =============================================================================
 
-# Memory management — tuned for zswap + disk-backed swap:
-#   vm.swappiness=30                 — with zswap, the first eviction tier is
-#                                      compressed RAM, not disk. Setting this to
-#                                      10 (correct for bare disk swap) defeats
-#                                      zswap by refusing to push cold anon pages
-#                                      into the fast compressed pool. 30 keeps
-#                                      file cache hot without hammering the SSD
-#   vm.page-cluster=3                — default read-ahead; sequential reads are
-#                                      cheap on NVMe/SSD so pre-faulting 2^3 = 8
-#                                      pages amortises I/O cost. Setting this to
-#                                      0 (a zram optimisation) actively hurts on
-#                                      real disk because pages have locality there
-#   vm.vfs_cache_pressure=50         — balanced inode/dentry cache reclaim
-#   vm.dirty_ratio=10                — flush dirty pages when 10% of RAM is dirty
-#   vm.dirty_background_ratio=5      — start background writeback at 5%
-#   vm.compaction_proactiveness=0    — disable proactive compaction; it runs in the
-#                                      background and causes latency spikes that are
-#                                      especially noticeable in games
-#   vm.watermark_boost_factor=0      — disable watermark boosting; it triggers
-#                                      aggressive reclaim after a spiky allocation,
-#                                      wasting CPU on workloads that don't need it
-#   vm.watermark_scale_factor=125    — widen the gap between low/high watermarks so
-#                                      kswapd wakes less often but reclaims more
-#                                      when it does, reducing reclaim churn
-# tee /etc/sysctl.d/99-memory.conf <<'EOF'
-# vm.swappiness=30
-# vm.page-cluster=3
-# vm.vfs_cache_pressure=50
-# vm.dirty_ratio=10
-# vm.dirty_background_ratio=5
-# vm.compaction_proactiveness=0
-# vm.watermark_boost_factor=0
-# vm.watermark_scale_factor=125
-# EOF
-
-# Gaming and development tunables:
-#   vm.max_map_count=1048576           — many Proton/Wine games require a high memory
-#                                        map count; the default (65530) causes silent
-#                                        crashes or launch failures in some titles
-#   vm.oom_kill_allocating_task=1      — immediately kill the task that triggered the
-#                                        kernel OOM killer. This is the last-resort
-#                                        fallback for processes not in a cgroup managed
-#                                        by systemd-oomd (see oomd.conf.d below);
-#                                        oomd acts first at cgroup granularity, this
-#                                        catches anything that slips through
-#   fs.inotify.max_user_watches        — VS Code and large dev projects exhaust the
-#   fs.inotify.max_user_instances        default limits, causing file watchers to
-#                                        silently stop working
-#   fs.file-max=2097152                — system-wide cap on open file
-#                                        descriptors; large dev environments,
-#                                        container runtimes, and parallel
-#                                        builds exhaust the default (1,048,576)
-#   kernel.perf_event_paranoid=1       — allows unprivileged perf access needed by
-#                                        MangoHud and other overlay/profiling tools
-#   kernel.nmi_watchdog=0              — disables the NMI watchdog, which generates
-#                                        periodic NMI interrupts for hang detection;
-#                                        unnecessary on a desktop and frees a perf
-#                                        counter on each core
-#   kernel.sched_autogroup_enabled=1   — group tasks by session so interactive apps
-#                                        and games don't compete with build jobs
-#   kernel.numa_balancing=0            — NUMA balancing adds overhead with no benefit
-#                                        on single-socket desktop systems
-#   kernel.split_lock_mitigate=0       — suppress split-lock slowdowns; some older
-#                                        Windows game binaries under Proton trigger
-#                                        these and suffer severe performance penalties.
-#                                        Tradeoff: disables bus-lock detection
-#                                        (CVE-2021-33149 class); acceptable on a
-#                                        trusted single-user desktop
-# tee /etc/sysctl.d/99-gaming-dev.conf <<'EOF'
-# vm.max_map_count=1048576
-# vm.oom_kill_allocating_task=1
-# fs.inotify.max_user_watches=524288
-# fs.inotify.max_user_instances=512
-# fs.file-max=2097152
-# kernel.perf_event_paranoid=1
-# kernel.nmi_watchdog=0
-# kernel.sched_autogroup_enabled=1
-# kernel.numa_balancing=0
-# kernel.split_lock_mitigate=0
-# EOF
-
 # Scheduler tunables for AMD FX (Bulldozer/Piledriver) module topology.
 # Remove this file on any CPU other than AMD FX-series (FX-4xxx/6xxx/8xxx,
 # ~2011–2014). On Zen, Intel, or any modern CPU, the upstream defaults are
@@ -383,43 +302,6 @@ tee /usr/lib/bootloader.d/zswap.conf <<'EOF'
 zswap.enabled=1 zswap.compressor=lz4 zswap.zpool=zsmalloc zswap.max_pool_percent=20 zswap.shrinker_enabled=1
 EOF
 
-# Transparent Huge Pages
-# See: https://github.com/max0x7ba/thp-usage
-# enabled=always       — all processes are eligible; reduces dTLB misses for
-#                        any workload with large anonymous memory regions
-# shmem_enabled=advise — only promote shared memory when explicitly requested,
-#                        avoiding overhead on small IPC buffers
-# defrag=always        — allocate huge pages immediately on fault via synchronous
-#                        compaction. With defer+madvise, khugepaged is the only
-#                        path to huge pages for most processes; it scans at most
-#                        8GB per 79s pass, so short-lived processes (game launches,
-#                        parallel builds) get huge pages too late or not at all.
-#                        The "compaction stalls hurt latency" argument originates
-#                        from database workloads with per-request latency budgets
-#                        — not applicable here.
-#                        See: github.com/max0x7ba/thp-usage
-#
-# khugepaged tuning (from thp-usage benchmarks):
-#   pages_to_scan=2097152          — scan up to 8GB of VMAs per pass; collapses
-#                                    any regions missed during synchronous fault
-#   scan_sleep_millisecs=79000     — scan every 79s; infrequent enough to avoid
-#                                    competing with foreground work
-#   max_ptes_none/shared=64        — allow collapsing regions with up to 64
-#                                    unmapped or shared PTEs; increases THP
-#                                    coverage on real workloads
-#   max_ptes_swap=0                — do not collapse regions with pages currently
-#                                    on swap; avoids unnecessary disk I/O
-# tee /etc/tmpfiles.d/thp.conf <<'EOF'
-# w! /sys/kernel/mm/transparent_hugepage/enabled                    - - - - always
-# w! /sys/kernel/mm/transparent_hugepage/shmem_enabled              - - - - advise
-# w! /sys/kernel/mm/transparent_hugepage/defrag                     - - - - always
-# w! /sys/kernel/mm/transparent_hugepage/khugepaged/pages_to_scan   - - - - 2097152
-# w! /sys/kernel/mm/transparent_hugepage/khugepaged/scan_sleep_millisecs - - - - 79000
-# w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none   - - - - 64
-# w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_shared - - - - 64
-# w! /sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_swap   - - - - 0
-# EOF
-
 # Mitigations — disable CPU vulnerability mitigations for maximum performance.
 tee /usr/lib/bootloader.d/mitigations.conf <<'EOF'
 mitigations=off
@@ -429,15 +311,6 @@ EOF
 # =============================================================================
 # systemd
 # =============================================================================
-# See: https://raw.githubusercontent.com/OneUptime/blog/refs/heads/master/posts/2026-03-04-systemd-oomd-out-of-memory-management-rhel-9/README.md
-
-# Tune systemd-oomd for slightly earlier intervention than upstream defaults.
-# mkdir -p /etc/systemd/oomd.conf.d
-# tee /etc/systemd/oomd.conf.d/00-tuning.conf <<'EOF'
-# [OOM]
-# SwapUsedLimit=85%
-# DefaultMemoryPressureDurationSec=20s
-# EOF
 
 # Cap the systemd journal at 150 MB to prevent unbounded disk usage
 mkdir -p /etc/systemd/journald.conf.d
@@ -480,9 +353,9 @@ EOF
 
 # Grant the 'audio' group access to /dev/cpu_dma_latency so real-time audio
 # applications (e.g. JACK, PipeWire) can set low DMA latency without root
-# tee /etc/udev/rules.d/60-cpu-dma-latency.rules <<'EOF'
-# DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
-# EOF
+tee /etc/udev/rules.d/60-cpu-dma-latency.rules <<'EOF'
+DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
+EOF
 
 
 # =============================================================================
@@ -500,19 +373,19 @@ EOF
 #           (game asset packs, build artefacts).
 #   SSDs  — mq-deadline for low-latency sequential I/O; modest read-ahead.
 #   eMMC  — same treatment as SSD.
-# tee /etc/udev/rules.d/60-ioschedulers.rules <<'EOF'
-# ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ATTR{queue/scheduler}="none", ATTR{queue/rq_affinity}="2", ATTR{queue/read_ahead_kb}="128"
-# ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq", ATTR{queue/read_ahead_kb}="2048"
-# ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
-# ACTION=="add|change", KERNEL=="mmcblk[0-9]*", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
-# EOF
+tee /etc/udev/rules.d/60-ioschedulers.rules <<'EOF'
+ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ATTR{queue/scheduler}="none", ATTR{queue/rq_affinity}="2", ATTR{queue/read_ahead_kb}="128"
+ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq", ATTR{queue/read_ahead_kb}="2048"
+ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
+ACTION=="add|change", KERNEL=="mmcblk[0-9]*", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
+EOF
 
 # Force SCSI/SATA link power management to max_performance, preventing the
 # host controller from downclocking links to save power (avoids I/O latency
 # spikes on spinning drives and some SSDs)
-# tee /etc/udev/rules.d/61-scsi-link-power.rules <<'EOF'
-# ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
-# EOF
+tee /etc/udev/rules.d/61-scsi-link-power.rules <<'EOF'
+ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
+EOF
 
 
 # =============================================================================
@@ -526,19 +399,6 @@ SUBSYSTEM=="input", ATTRS{name}=="*Controller*", GROUP="input", MODE="0660"
 SUBSYSTEM=="input", KERNEL=="js[0-9]*", GROUP="input", MODE="0660"
 SUBSYSTEM=="input", KERNEL=="event[0-9]*", ATTRS{name}=="*Controller*", GROUP="input", MODE="0660"
 EOF
-
-# GPU reset recovery for drm drivers — when the GPU hangs and resets, the
-# kernel exposes a RESET event with the PID of the offending process. These
-# rules:
-#   - On a GPU reset event, kill the owning PID to release the hung context.
-#     ENV{PID}!="" guards against an unset PID expanding to an empty string,
-#     which would cause `test  -gt 1000` to error and skip the kill silently.
-#   - If the display server (Plasma Login Manager) is involved, restart it to recover the
-#     desktop session cleanly
-# tee /etc/udev/rules.d/80-gpu-reset.rules <<'EOF'
-# ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{PID}!="", ENV{PID}!="0", PROGRAM="/usr/bin/sh -c 'test %E{PID} -gt 1000'", RUN+="/usr/bin/kill -9 %E{PID}"
-# ACTION=="change", SUBSYSTEM=="drm", ENV{RESET}=="1", ENV{FLAGS}=="1", RUN+="/usr/sbin/systemctl restart plasmalogin"
-# EOF
 
 # Allow the logged-in user to access /dev/ntsync so Wine/Proton can use
 # native NTsync primitives. Without this, the ntsync module is loaded but
