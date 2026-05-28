@@ -23,16 +23,19 @@ rm -rf /opt && mkdir /opt
 TABBY_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
      "https://api.github.com/repos/Eugeny/tabby/releases/latest" | \
      jq -r '.tag_name' | sed 's/^v//')
+
+
 # https://github.com/kem-a/appimage-thumbnailer/releases
 APPIMAGE_THUMBNAILER_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
      "https://api.github.com/repos/kem-a/appimage-thumbnailer/releases/latest" | \
      jq -r '.tag_name' | sed 's/^v//')
+
+
 # https://github.com/bitwarden/clients/releases
 BITWARDEN_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
      "https://api.github.com/repos/bitwarden/clients/releases" | \
      jq -r '[.[] | select(.tag_name | startswith("desktop-"))][0].tag_name' | \
      sed 's/^desktop-v//')
-
 
 
 # =============================================================================
@@ -53,6 +56,7 @@ gpgcheck=1
 gpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-free-fedora-$releasever
 EOF
 
+
 # RPM Fusion Nonfree NVIDIA — provides the proprietary NVIDIA driver
 tee /etc/yum.repos.d/rpmfusion-nonfree-nvidia.repo <<'EOF'
 [rpmfusion-nonfree-nvidia]
@@ -64,6 +68,7 @@ gpgcheck=1
 repo_gpgcheck=0
 gpgkey=file:///usr/share/distribution-gpg-keys/rpmfusion/RPM-GPG-KEY-rpmfusion-nonfree-fedora-$releasever
 EOF
+
 
 # Docker CE — upstream Docker engine, CLI, and compose plugin
 rpm --import https://download.docker.com/linux/fedora/gpg
@@ -77,6 +82,7 @@ gpgcheck=1
 gpgkey=https://download.docker.com/linux/fedora/gpg
 EOF
 
+
 # Visual Studio Code — Microsoft's official VS Code repo
 rpm --import https://packages.microsoft.com/keys/microsoft.asc
 tee /etc/yum.repos.d/vscode.repo <<'EOF'
@@ -88,6 +94,7 @@ enabled_metadata=1
 gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
+
 
 # LACT (Linux GPU Control Application) — GPU overclocking and monitoring
 rpm --import https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
@@ -102,6 +109,19 @@ gpgkey=https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
 EOF
 
 
+# CachyOS kernel addons — provides scx-scheds (sched_ext schedulers) and scx-tools
+rpm --import https://download.copr.fedorainfracloud.org/results/bieszczaders/kernel-cachyos-addons/pubkey.gpg
+tee /etc/yum.repos.d/cachyos-addons.repo <<'EOF'
+[cachyos-addons]
+name=CachyOS kernel addons
+baseurl=https://download.copr.fedorainfracloud.org/results/bieszczaders/kernel-cachyos-addons/fedora-$releasever-$basearch/
+enabled=0
+enabled_metadata=1
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/bieszczaders/kernel-cachyos-addons/pubkey.gpg
+EOF
+
+
 # =============================================================================
 # Package Installation
 # =============================================================================
@@ -109,6 +129,7 @@ EOF
 # Replace the Fedora-bundled ffmpeg stub with the full build from RPM Fusion,
 # which includes patented codecs (H.264, AAC, etc.) not shipped by default
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
+
 
 # Install all repo-based packages in a single transaction for efficiency.
 # Repos are enabled inline rather than globally to avoid polluting the default
@@ -150,6 +171,7 @@ dnf5 -y install \
     --enablerepo=lact \
     --enablerepo=rpmfusion-free \
     --enablerepo=vscode \
+    --enablerepo=cachyos-addons \
     adw-gtk3-theme \
     akmods \
     android-tools \
@@ -179,7 +201,10 @@ dnf5 -y install \
     pipewire-codec-aptx \
     python3-pip \
     python3-pyicu \
-    rpmdevtools
+    rpmdevtools \
+    scx-scheds \
+    scx-tools
+
 
 # Steam pulls in runtime libs older than what the base image ships,
 # which would downgrade libgcc/libstdc++ system-wide and break post-install
@@ -193,14 +218,17 @@ dnf5 -y install \
     --exclude='cpp.x86_64' \
     steam
 
+
 # Install direct RPMs fetched from upstream release pages.
 # Kept in separate dnf5 calls so a single failure is easy to identify and retry.
 
 # Bitwarden — Bitwarden client app for linux desktops
 dnf5 install -y "https://github.com/bitwarden/clients/releases/download/desktop-v${BITWARDEN_VERSION}/Bitwarden-${BITWARDEN_VERSION}-x86_64.rpm"
 
+
 # Tabby — A terminal for a more modern age
 dnf5 install -y "https://github.com/Eugeny/tabby/releases/download/v${TABBY_VERSION}/tabby-${TABBY_VERSION}-linux-x64.rpm"
+
 
 # AppImage Thumbnailer — Generates AppImage thumbnails for Linux desktops
 dnf5 install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download/v${APPIMAGE_THUMBNAILER_VERSION}/appimage-thumbnailer-v${APPIMAGE_THUMBNAILER_VERSION}-1.x86_64.rpm"
@@ -278,11 +306,13 @@ kernel.sched_wakeup_granularity_ns=4000000
 kernel.sched_migration_cost_ns=1000000
 EOF
 
+
 # Disable zram — using zswap with a dedicated swap partition on the SSD instead.
 # An empty zram-generator.conf overrides any upstream or package-provided config
 # that would otherwise create a zram device on first boot.
 # See: https://chrisdown.name/2026/03/24/zswap-vs-zram-when-to-use-what.html
 > /etc/systemd/zram-generator.conf
+
 
 # zswap kernel arguments — applied by bootc on fresh installs.
 # Existing deployments: run `rpm-ostree kargs --append=...` once manually.
@@ -303,6 +333,19 @@ tee /usr/lib/bootloader.d/zswap.conf <<'EOF'
 zswap.enabled=1 zswap.compressor=lz4 zswap.zpool=zsmalloc zswap.max_pool_percent=20 zswap.shrinker_enabled=1
 EOF
 
+
+# sched_ext — userspace scheduler via scx_loader
+# scx_bpfland: cache-topology aware, good for desktop/gaming. Its L2/L3 affinity
+# awareness is particularly relevant on FX's shared-cache module topology.
+# The CFS tunables in 99-amd-fx-scheduler.conf are ignored while scx is active;
+# they remain as a fallback if scx_loader stops.
+mkdir -p /etc/
+tee /etc/scx_loader.toml <<'EOF'
+default_sched = "scx_bpfland"
+default_mode = "Gaming"
+EOF
+
+
 # Mitigations — disable CPU vulnerability mitigations for maximum performance.
 tee /usr/lib/bootloader.d/mitigations.conf <<'EOF'
 mitigations=off
@@ -320,10 +363,12 @@ tee /etc/systemd/journald.conf.d/00-journal-size.conf <<'EOF'
 SystemMaxUse=150M
 EOF
 
+
 # Retain core dumps for 3 days, then clean them up automatically
 tee /etc/tmpfiles.d/coredump.conf <<'EOF'
 d /var/lib/systemd/coredump 0755 root root 3d
 EOF
+
 
 # Configure the system and git to use ksshaskpass for SSH passphrase prompts.
 mkdir -p /etc/environment.d
@@ -333,6 +378,7 @@ SSH_ASKPASS_REQUIRE=prefer
 GIT_ASKPASS=/usr/bin/ksshaskpass
 EOF
 
+
 ## nvidia-vaapi-driver Source:
 ## https://github.com/elFarto/nvidia-vaapi-driver?tab=readme-ov-file#configuration
 tee /etc/environment.d/50-vaapi.conf <<'EOF'
@@ -340,6 +386,7 @@ NVD_BACKEND=direct
 LIBVA_DRIVER_NAME=nvidia
 CUDA_DISABLE_PERF_BOOST=1
 EOF
+
 
 # Increase Nvidia's shader cache size to 12GB
 # https://wiki.cachyos.org/configuration/gaming/#increase-maximum-shader-cache-size
@@ -381,6 +428,7 @@ ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="0", ATTR{queu
 ACTION=="add|change", KERNEL=="mmcblk[0-9]*", ATTR{queue/scheduler}="mq-deadline", ATTR{queue/read_ahead_kb}="512"
 EOF
 
+
 # Force SCSI/SATA link power management to max_performance, preventing the
 # host controller from downclocking links to save power (avoids I/O latency
 # spikes on spinning drives and some SSDs)
@@ -401,6 +449,7 @@ SUBSYSTEM=="input", KERNEL=="js[0-9]*", GROUP="input", MODE="0660"
 SUBSYSTEM=="input", KERNEL=="event[0-9]*", ATTRS{name}=="*Controller*", GROUP="input", MODE="0660"
 EOF
 
+
 # Allow the logged-in user to access /dev/ntsync so Wine/Proton can use
 # native NTsync primitives. Without this, the ntsync module is loaded but
 # the device is root-only and ignored by Proton at runtime.
@@ -416,7 +465,8 @@ systemctl enable \
     containerd.service \
     docker.service \
     lactd.service \
-    ratbagd.service
+    ratbagd.service \
+    scx_loader.service
 
 
 # =============================================================================
