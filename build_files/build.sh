@@ -181,16 +181,16 @@ dnf5 -y install \
     python3-pyicu \
     rpmdevtools
 
-# Steam pulls in i686 GCC runtime libs older than what the base image ships,
+# Steam pulls in runtime libs older than what the base image ships,
 # which would downgrade libgcc/libstdc++ system-wide and break post-install
 # scriptlets. Exclude those packages so Steam uses the base image's versions.
 dnf5 -y install \
     --enablerepo=rpmfusion-nonfree-steam \
-    --exclude='libgcc.i686' \
-    --exclude='libstdc++.i686' \
-    --exclude='libgomp.i686' \
-    --exclude='libatomic.i686' \
-    --exclude='cpp.i686' \
+    --exclude='libgcc.x86_64' \
+    --exclude='libstdc++.x86_64' \
+    --exclude='libgomp.x86_64' \
+    --exclude='libatomic.x86_64' \
+    --exclude='cpp.x86_64' \
     steam
 
 # Install direct RPMs fetched from upstream release pages.
