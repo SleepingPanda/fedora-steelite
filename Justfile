@@ -1,10 +1,4 @@
-export image_name := env("fedora-steelite", "image-template") # output image name, usually same as repo name, change as needed
-export default_tag := env("DEFAULT_TAG", "latest")
-export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
-
-alias build-vm := build-qcow2
-alias rebuild-vm := rebuild-qcow2
-alias run-vm := run-vm-qcow2
+export image_name := env("IMAGE_NAME", "fedora-steelite") # output image name, usually same as repo name, change as needed
 
 [private]
 default:
@@ -86,7 +80,7 @@ sudoif command *args:
 #
 
 # Build the image using the specified parameters
-build $target_image=image_name $tag=default_tag:
+build $target_image=image_name $tag="latest":
     #!/usr/bin/env bash
 
     BUILD_ARGS=()

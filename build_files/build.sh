@@ -7,9 +7,10 @@
 
 set -eoux pipefail
 GITHUB_TOKEN=$(cat /run/secrets/github_token)
+   [[ -n "$GITHUB_TOKEN" ]] || { echo "ERROR: github_token secret is empty"; exit 1; }
 
 
-# Replace the /opt symlink with a real directory so the path becomes immutable
+# Replace the /opt symlink with a real directory so the path becomes mutable
 # (prevents downstream layers from accidentally writing through a symlink)
 rm -rf /opt && mkdir /opt
 
@@ -20,16 +21,18 @@ rm -rf /opt && mkdir /opt
 
 # https://github.com/Eugeny/tabby/releases
 TABBY_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-"https://api.github.com/repos/Eugeny/tabby/releases/latest" | grep -oP \
-'"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
+     "https://api.github.com/repos/Eugeny/tabby/releases/latest" | \
+     jq -r '.tag_name' | sed 's/^v//')
 # https://github.com/kem-a/appimage-thumbnailer/releases
 APPIMAGE_THUMBNAILER_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-"https://api.github.com/repos/kem-a/appimage-thumbnailer/releases/latest" | grep -oP \
-'"tag_name"\s*:\s*"\K[^"]+' | head -1 | grep -oP '(?<=v).*')
+     "https://api.github.com/repos/kem-a/appimage-thumbnailer/releases/latest" | \
+     jq -r '.tag_name' | sed 's/^v//')
 # https://github.com/bitwarden/clients/releases
 BITWARDEN_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-"https://api.github.com/repos/bitwarden/clients/releases" | grep -oP \
-'"tag_name"\s*:\s*"\Kdesktop-[^"]+' | head -1 | grep -oP '(?<=desktop-v).*')
+     "https://api.github.com/repos/bitwarden/clients/releases" | \
+     jq -r '[.[] | select(.tag_name | startswith("desktop-"))][0].tag_name' | \
+     sed 's/^desktop-v//')
+
 
 
 # =============================================================================
@@ -134,7 +137,6 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 #   glycin-thumbnailer          — GNOME image thumbnailer
 #   gstreamer1-plugin-*         — additional codec support (H.264, ugly/bad sets)
 #   gstreamer1-vaapi            — VA-API hardware video decode/encode via GStreamer
-#   heif-pixbuf-loader          — HEIF image format support in GNOME and KDE
 #   lact                        — AMD GPU control application
 #   libheif-freeworld           — HEIF image format support with patented codecs
 #   libheif-tools               — CLI tools for inspecting and converting HEIF files
@@ -143,7 +145,6 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 #
 # System:
 #   adw-gtk3-theme              — modern GTK theme for a polished desktop
-#   ksshaskpass                 — KDE SSH passphrase dialog (integrates with KWallet)
 dnf5 -y install \
     --enablerepo=docker-ce \
     --enablerepo=lact \
@@ -185,11 +186,11 @@ dnf5 -y install \
 # scriptlets. Exclude those packages so Steam uses the base image's versions.
 dnf5 -y install \
     --enablerepo=rpmfusion-nonfree-steam \
-    --exclude='libgcc.x86_64' \
-    --exclude='libstdc++.x86_64' \
-    --exclude='libgomp.x86_64' \
-    --exclude='libatomic.x86_64' \
-    --exclude='cpp.x86_64' \
+    --exclude='libgcc.i686' \
+    --exclude='libstdc++.i686' \
+    --exclude='libgomp.i686' \
+    --exclude='libatomic.i686' \
+    --exclude='cpp.i686' \
     steam
 
 # Install direct RPMs fetched from upstream release pages.
