@@ -15,6 +15,7 @@ GITHUB_TOKEN=$(cat /run/secrets/github_token)
 
 # Replace the /opt symlink with a real directory so the path becomes mutable
 # (prevents downstream layers from accidentally writing through a symlink)
+
 rm -rf /opt && mkdir /opt
 
 
@@ -23,18 +24,21 @@ rm -rf /opt && mkdir /opt
 # ============================================================
 
 # https://github.com/Eugeny/tabby/releases
+
 TABBY_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
      "https://api.github.com/repos/Eugeny/tabby/releases/latest" | \
      jq -r '.tag_name' | sed 's/^v//')
 
 
 # https://github.com/kem-a/appimage-thumbnailer/releases
+
 APPIMAGE_THUMBNAILER_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
      "https://api.github.com/repos/kem-a/appimage-thumbnailer/releases/latest" | \
      jq -r '.tag_name' | sed 's/^v//')
 
 
 # https://github.com/bitwarden/clients/releases
+
 BITWARDEN_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
      "https://api.github.com/repos/bitwarden/clients/releases" | \
      jq -r '[.[] | select(.tag_name | startswith("desktop-"))][0].tag_name' | \
@@ -50,6 +54,7 @@ BITWARDEN_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
 # time via --enablerepo, keeping the base system's metadata footprint small.
 
 # RPM Fusion Free - provides open-source media codecs (ffmpeg, gstreamer, etc.)
+
 tee /etc/yum.repos.d/rpmfusion-free.repo <<'EOF'
 [rpmfusion-free]
 name=RPM Fusion for Fedora $releasever
@@ -62,6 +67,7 @@ EOF
 
 
 # Docker CE - upstream Docker engine, CLI, and compose plugin
+
 rpm --import https://download.docker.com/linux/fedora/gpg
 tee /etc/yum.repos.d/docker-ce.repo <<'EOF'
 [docker-ce]
@@ -75,6 +81,7 @@ EOF
 
 
 # Visual Studio Code - Microsoft's official VS Code repo
+
 rpm --import https://packages.microsoft.com/keys/microsoft.asc
 tee /etc/yum.repos.d/vscode.repo <<'EOF'
 [vscode]
@@ -88,6 +95,7 @@ EOF
 
 
 # LACT (Linux GPU Control Application) - GPU overclocking and monitoring
+
 rpm --import https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/pubkey.gpg
 tee /etc/yum.repos.d/lact.repo <<'EOF'
 [lact]
@@ -101,6 +109,7 @@ EOF
 
 
 # CachyOS kernel addons - provides scx-scheds (sched_ext schedulers) and scx-tools
+
 rpm --import https://download.copr.fedorainfracloud.org/results/bieszczaders/kernel-cachyos-addons/pubkey.gpg
 tee /etc/yum.repos.d/cachyos-addons.repo <<'EOF'
 [cachyos-addons]
@@ -122,11 +131,13 @@ EOF
 # requires the repo to be enabled before the swap transaction resolves the
 # ffmpeg provider. Setting it globally here is intentional; it is the only repo
 # that receives this treatment.
+
 dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
 
 
 # Replace the Fedora-bundled ffmpeg stub with the full build from RPM Fusion,
 # which includes patented codecs (H.264, AAC, etc.) not shipped by default
+
 dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 
 
@@ -147,7 +158,6 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 #
 # Gaming:
 #   gamescope                   - Valve's micro-compositor for gaming sessions
-#   libratbag-ratbagd           - gaming mouse configuration daemon
 #   mangohud                    - in-game performance overlay
 #   steam                       - Valve Steam client
 #
@@ -165,6 +175,12 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 #
 # System:
 #   adw-gtk3-theme              - modern GTK theme for a polished desktop
+#   fuse / fuse-libs            - Filesystem in Userspace, required by some tools
+#   libgee                      - GObject-based collection library; required by some tools
+#   libratbag-ratbagd           - mouse configuration daemon
+#   scx-scheds / scx-tools      - sched_ext userspace scheduler and utilities
+#   scx-manager                 - GUI for managing scx_loader and sched_ext schedulers
+
 dnf5 -y install \
     --enablerepo=docker-ce \
     --enablerepo=lact \
@@ -209,6 +225,7 @@ dnf5 -y install \
 # Steam pulls in runtime libs older than what the base image ships,
 # which would downgrade libgcc/libstdc++ system-wide and break post-install
 # scriptlets. Exclude those packages so Steam uses the base image's versions.
+
 dnf5 -y install \
     --enablerepo=rpmfusion-nonfree-steam \
     --exclude='libgcc.x86_64' \
@@ -223,14 +240,17 @@ dnf5 -y install \
 # Kept in separate dnf5 calls so a single failure is easy to identify and retry.
 
 # Bitwarden - Bitwarden client app for linux desktops
+
 dnf5 install -y "https://github.com/bitwarden/clients/releases/download/desktop-v${BITWARDEN_VERSION}/Bitwarden-${BITWARDEN_VERSION}-x86_64.rpm"
 
 
 # Tabby - A terminal for a more modern age
+
 dnf5 install -y "https://github.com/Eugeny/tabby/releases/download/v${TABBY_VERSION}/tabby-${TABBY_VERSION}-linux-x64.rpm"
 
 
 # AppImage Thumbnailer - Generates AppImage thumbnails for Linux desktops
+
 dnf5 install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download/v${APPIMAGE_THUMBNAILER_VERSION}/appimage-thumbnailer-v${APPIMAGE_THUMBNAILER_VERSION}-1.x86_64.rpm"
 
 
@@ -241,6 +261,7 @@ dnf5 install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download
 # Strip out packages that are unnecessary in this image to reduce size.
 # Critical firmware blobs (NVIDIA, AMD µcode, linux-firmware, Realtek) and
 # the kernel are explicitly excluded so hardware support is not broken.
+
 dnf5 -y remove '*-firmware' thermald firefox \
     --exclude='nvidia-gpu-firmware' \
     --exclude='amd-ucode-firmware' \
@@ -256,6 +277,7 @@ dnf5 -y remove '*-firmware' thermald firefox \
 
 # Create system groups with fixed GIDs so bind-mounted socket permissions are
 # consistent across rebuilds.
+
 tee /usr/lib/sysusers.d/steelite.conf <<'EOF'
 g docker  998
 EOF
@@ -267,6 +289,7 @@ EOF
 
 # Disable NVMe power management latency tolerance - prevents the controller
 # from downclocking during I/O bursts
+
 tee /etc/modprobe.d/nvme.conf <<'EOF'
 options nvme_core default_ps_max_latency_us=0
 EOF
@@ -301,6 +324,7 @@ EOF
 #                                           after it runs; discourages migration
 #                                           across module boundaries where L2 is
 #                                           not shared, reducing cold-cache misses
+
 tee /etc/sysctl.d/99-amd-fx-scheduler.conf <<'EOF'
 kernel.sched_latency_ns=10000000
 kernel.sched_min_granularity_ns=3000000
@@ -313,6 +337,7 @@ EOF
 # An empty zram-generator.conf overrides any upstream or package-provided config
 # that would otherwise create a zram device on first boot.
 # See: https://chrisdown.name/2026/03/24/zswap-vs-zram-when-to-use-what.html
+
 > /etc/systemd/zram-generator.conf
 
 
@@ -330,6 +355,7 @@ EOF
 #                                    compressed pool before tiering to disk;
 #                                    the dynamic shrinker normally keeps usage
 #                                    well below this ceiling
+
 mkdir -p /usr/lib/bootloader.d
 tee /usr/lib/bootloader.d/zswap.conf <<'EOF'
 zswap.enabled=1 zswap.compressor=lz4 zswap.zpool=zsmalloc zswap.max_pool_percent=20 zswap.shrinker_enabled=1
@@ -341,6 +367,7 @@ EOF
 # awareness is particularly relevant on FX's shared-cache module topology.
 # The CFS tunables in 99-amd-fx-scheduler.conf are ignored while scx is active;
 # they remain as a fallback if scx_loader stops.
+
 mkdir -p /etc/
 tee /etc/scx_loader.toml <<'EOF'
 default_sched = "scx_bpfland"
@@ -349,6 +376,7 @@ EOF
 
 
 # Mitigations - disable CPU vulnerability mitigations for maximum performance.
+
 tee /usr/lib/bootloader.d/mitigations.conf <<'EOF'
 mitigations=off
 EOF
@@ -359,6 +387,7 @@ EOF
 # =============================================================================
 
 # Cap the systemd journal at 150 MB to prevent unbounded disk usage
+
 mkdir -p /etc/systemd/journald.conf.d
 tee /etc/systemd/journald.conf.d/00-journal-size.conf <<'EOF'
 [Journal]
@@ -367,12 +396,14 @@ EOF
 
 
 # Retain core dumps for 3 days, then clean them up automatically
+
 tee /etc/tmpfiles.d/coredump.conf <<'EOF'
 d /var/lib/systemd/coredump 0755 root root 3d
 EOF
 
 
 # Configure the system and git to use ksshaskpass for SSH passphrase prompts.
+
 mkdir -p /etc/environment.d
 tee /etc/environment.d/50-ssh-askpass.conf <<'EOF'
 SSH_ASKPASS=/usr/bin/ksshaskpass
@@ -383,6 +414,7 @@ EOF
 
 ## nvidia-vaapi-driver Source:
 ## https://github.com/elFarto/nvidia-vaapi-driver?tab=readme-ov-file#configuration
+
 tee /etc/environment.d/50-vaapi.conf <<'EOF'
 NVD_BACKEND=direct
 LIBVA_DRIVER_NAME=nvidia
@@ -392,6 +424,7 @@ EOF
 
 # Increase Nvidia's shader cache size to 12GB
 # https://wiki.cachyos.org/configuration/gaming/#increase-maximum-shader-cache-size
+
 tee /etc/environment.d/50-nvidia-cache.conf <<'EOF'
 __GL_SHADER_DISK_CACHE_SIZE=12000000000
 EOF
@@ -403,6 +436,7 @@ EOF
 
 # Grant the 'audio' group access to /dev/cpu_dma_latency so real-time audio
 # applications (e.g. JACK, PipeWire) can set low DMA latency without root
+
 tee /etc/udev/rules.d/60-cpu-dma-latency.rules <<'EOF'
 DEVPATH=="/devices/virtual/misc/cpu_dma_latency", OWNER="root", GROUP="audio", MODE="0660"
 EOF
@@ -423,6 +457,7 @@ EOF
 #           (game asset packs, build artefacts).
 #   SSDs  - mq-deadline for low-latency sequential I/O; modest read-ahead.
 #   eMMC  - same treatment as SSD.
+
 tee /etc/udev/rules.d/60-ioschedulers.rules <<'EOF'
 ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ATTR{queue/scheduler}="none", ATTR{queue/rq_affinity}="2", ATTR{queue/read_ahead_kb}="128"
 ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq", ATTR{queue/read_ahead_kb}="2048"
@@ -434,6 +469,7 @@ EOF
 # Force SCSI/SATA link power management to max_performance, preventing the
 # host controller from downclocking links to save power (avoids I/O latency
 # spikes on spinning drives and some SSDs)
+
 tee /etc/udev/rules.d/61-scsi-link-power.rules <<'EOF'
 ACTION=="add", SUBSYSTEM=="scsi_host", KERNEL=="host*", ATTR{link_power_management_policy}=="*", ATTR{link_power_management_policy}="max_performance"
 EOF
@@ -445,6 +481,7 @@ EOF
 
 # Grant the 'input' group read/write access to gamepad and joystick nodes so
 # emulators and non-Steam games can read controllers without running as root
+
 tee /etc/udev/rules.d/70-gamepad-permissions.rules <<'EOF'
 SUBSYSTEM=="input", ATTRS{name}=="*Controller*", GROUP="input", MODE="0660"
 SUBSYSTEM=="input", KERNEL=="js[0-9]*", GROUP="input", MODE="0660"
@@ -455,6 +492,7 @@ EOF
 # Allow the logged-in user to access /dev/ntsync so Wine/Proton can use
 # native NTsync primitives. Without this, the ntsync module is loaded but
 # the device is root-only and ignored by Proton at runtime.
+
 tee /etc/udev/rules.d/99-ntsync.rules <<'EOF'
 KERNEL=="ntsync", group="gamemode", MODE="0660", TAG+="uaccess"
 EOF
@@ -463,6 +501,7 @@ EOF
 # =============================================================================
 # Service Enablement
 # =============================================================================
+
 systemctl enable \
     containerd.service \
     docker.service \
@@ -478,6 +517,7 @@ systemctl enable \
 # Remove cached package metadata and downloaded RPMs to keep the image lean.
 # /var/lib/containers is cleared because akmods may pull container images
 # during kernel module builds; those are not needed in the final image.
+
 dnf5 -y clean all
 rm -rf \
     /var/lib/dnf \
