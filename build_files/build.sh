@@ -202,7 +202,8 @@ dnf5 -y install \
     python3-pyicu \
     rpmdevtools \
     scx-scheds \
-    scx-tools
+    scx-tools \
+    scx-manager
 
 
 # Steam pulls in runtime libs older than what the base image ships,
