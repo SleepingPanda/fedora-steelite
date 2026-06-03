@@ -122,18 +122,27 @@ gpgkey=https://download.copr.fedorainfracloud.org/results/bieszczaders/kernel-ca
 EOF
 
 
+# Negativo17's 'NVIDIA driver 580 LTS repository' - provides the latest
+# long-term support NVIDIA driver
+
+rpm --import https://negativo17.org/repos/RPM-GPG-KEY-slaanesh
+tee /etc/yum.repos.d/fedora-nvidia-580.repo <<'EOF'
+[fedora-nvidia-580]
+name=negativo17 - Nvidia
+baseurl=https://negativo17.org/repos/nvidia-580/fedora-$releasever/$basearch/
+enabled=1
+skip_if_unavailable=1
+gpgcheck=1
+gpgkey=https://negativo17.org/repos/RPM-GPG-KEY-slaanesh
+enabled_metadata=1
+metadata_expire=6h
+type=rpm-md
+repo_gpgcheck=0
+EOF
+
 # =============================================================================
 # Package Installation
 # =============================================================================
-
-# rpmfusion-nonfree-nvidia-driver is a Fedora-bundled repo (not defined above)
-# and cannot be enabled inline with --enablerepo at install time because dnf5
-# requires the repo to be enabled before the swap transaction resolves the
-# ffmpeg provider. Setting it globally here is intentional; it is the only repo
-# that receives this treatment.
-
-dnf5 -y config-manager setopt rpmfusion-nonfree-nvidia-driver.enabled=1
-
 
 # Replace the Fedora-bundled ffmpeg stub with the full build from RPM Fusion,
 # which includes patented codecs (H.264, AAC, etc.) not shipped by default
