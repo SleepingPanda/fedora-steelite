@@ -140,6 +140,26 @@ type=rpm-md
 repo_gpgcheck=0
 EOF
 
+
+# Negativo17's 'Steam repository for Fedora' - provides the latest Steam
+# client for Fedora
+
+rpm --import https://negativo17.org/repos/RPM-GPG-KEY-slaanesh
+tee /etc/yum.repos.d/fedora-steam.repo <<'EOF'
+[fedora-steam]
+name=negativo17 - Steam
+baseurl=https://negativo17.org/repos/steam/fedora-$releasever/$basearch/
+enabled=0
+skip_if_unavailable=1
+gpgcheck=1
+gpgkey=https://negativo17.org/repos/RPM-GPG-KEY-slaanesh
+enabled_metadata=1
+metadata_expire=6h
+type=rpm-md
+repo_gpgcheck=0
+EOF
+
+
 # =============================================================================
 # Package Installation
 # =============================================================================
@@ -191,11 +211,12 @@ dnf5 -y swap ffmpeg-free --enablerepo=rpmfusion-free ffmpeg --allowerasing
 #   scx-manager                 - GUI for managing scx_loader and sched_ext schedulers
 
 dnf5 -y install \
+    --enablerepo=cachyos-addons \
     --enablerepo=docker-ce \
+    --enablerepo=fedora-steam \
     --enablerepo=lact \
     --enablerepo=rpmfusion-free \
     --enablerepo=vscode \
-    --enablerepo=cachyos-addons \
     adw-gtk3-theme \
     akmods \
     android-tools \
@@ -228,20 +249,7 @@ dnf5 -y install \
     rpmdevtools \
     scx-scheds \
     scx-tools \
-    scx-manager
-
-
-# Steam pulls in runtime libs older than what the base image ships,
-# which would downgrade libgcc/libstdc++ system-wide and break post-install
-# scriptlets. Exclude those packages so Steam uses the base image's versions.
-
-dnf5 -y install \
-    --enablerepo=rpmfusion-nonfree-steam \
-    --exclude='libgcc.x86_64' \
-    --exclude='libstdc++.x86_64' \
-    --exclude='libgomp.x86_64' \
-    --exclude='libatomic.x86_64' \
-    --exclude='cpp.x86_64' \
+    scx-manager \
     steam
 
 
