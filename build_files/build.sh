@@ -385,7 +385,6 @@ EOF
 # The CFS tunables in 99-amd-fx-scheduler.conf are ignored while scx is active;
 # they remain as a fallback if scx_loader stops.
 
-mkdir -p /etc/
 tee /etc/scx_loader.toml <<'EOF'
 default_sched = "scx_bpfland"
 default_mode = "Gaming"
