@@ -271,22 +271,6 @@ dnf5 install -y "https://github.com/Eugeny/tabby/releases/download/v${TABBY_VERS
 dnf5 install -y "https://github.com/kem-a/appimage-thumbnailer/releases/download/v${APPIMAGE_THUMBNAILER_VERSION}/appimage-thumbnailer-v${APPIMAGE_THUMBNAILER_VERSION}-1.x86_64.rpm"
 
 
-# =============================================================================
-# Package Removal
-# =============================================================================
-
-# Strip out packages that are unnecessary in this image to reduce size.
-# Critical firmware blobs (NVIDIA, AMD µcode, linux-firmware, Realtek) and
-# the kernel are explicitly excluded so hardware support is not broken.
-
-dnf5 -y remove '*-firmware' thermald firefox \
-    --exclude='nvidia-gpu-firmware' \
-    --exclude='amd-ucode-firmware' \
-    --exclude='linux-firmware*' \
-    --exclude='realtek-firmware' \
-    --exclude='kernel' \
-    --exclude='kernel-*'
-
 
 # =============================================================================
 # System Groups
@@ -315,40 +299,6 @@ EOF
 # =============================================================================
 # Kernel Tunables (sysctl)
 # =============================================================================
-
-# Scheduler tunables for AMD FX (Bulldozer/Piledriver) module topology.
-# Remove this file on any CPU other than AMD FX-series (FX-4xxx/6xxx/8xxx,
-# ~2011–2014). On Zen, Intel, or any modern CPU, the upstream defaults are
-# better and these values will hurt scheduling latency.
-#
-#   kernel.sched_latency_ns=10000000      - CFS scheduling period: all runnable
-#                                           tasks are guaranteed a slot within
-#                                           this window. 10ms vs the 6ms default
-#                                           reduces context-switch frequency;
-#                                           Bulldozer pays a high per-switch cost
-#                                           from shared integer cluster state
-#   kernel.sched_min_granularity_ns=3000000 - minimum timeslice before preemption
-#                                           (3ms). Longer slices amortise the FX
-#                                           switch cost from shared fetch/decode
-#                                           state within each two-core module
-#   kernel.sched_wakeup_granularity_ns=4000000 - a waking task must lead the
-#                                           running task by this much in vruntime
-#                                           before it can preempt (4ms vs 1ms
-#                                           default). Suppresses thrash from
-#                                           threads competing on the same module's
-#                                           shared dispatch port
-#   kernel.sched_migration_cost_ns=1000000 - treat a task as cache-hot for 1ms
-#                                           after it runs; discourages migration
-#                                           across module boundaries where L2 is
-#                                           not shared, reducing cold-cache misses
-
-tee /etc/sysctl.d/99-amd-fx-scheduler.conf <<'EOF'
-kernel.sched_latency_ns=10000000
-kernel.sched_min_granularity_ns=3000000
-kernel.sched_wakeup_granularity_ns=4000000
-kernel.sched_migration_cost_ns=1000000
-EOF
-
 
 # Disable zram - using zswap with a dedicated swap partition on the SSD instead.
 # An empty zram-generator.conf overrides any upstream or package-provided config
